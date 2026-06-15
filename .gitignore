@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code local config (CLAUDE.md at repo root stays tracked)
+.claude/
