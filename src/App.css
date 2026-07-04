@@ -142,11 +142,19 @@ button {
   height: 28px;
   width: 28px;
   border-radius: 50%;
+  border: none;
+  padding: 0;
   background: #a7dccb;
   color: #31504a;
   display: grid;
   place-items: center;
   font-weight: bold;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+.user-bubble:hover {
+  background: #8fcdb8;
 }
 
 /* Workspace */
@@ -161,7 +169,7 @@ button {
 /* Patient sidebar is fixed width (not user-resizable). */
 .fixed-sidebar {
   flex: none;
-  width: 210px;
+  width: 172px;
   height: 100%;
 }
 
@@ -295,8 +303,8 @@ button {
 }
 
 .patient-avatar {
-  width: 68px;
-  height: 68px;
+  width: 48px;
+  height: 48px;
   margin: 4px auto 4px;
   border-radius: 50%;
   background: #dbe0ff;
@@ -2551,4 +2559,61 @@ button {
 
 .preview-tab-close:hover {
   color: #b21f1f;
+}
+
+/* ---------- Epic-style letter page for note previews ---------- */
+
+.note-page {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #b9bfa5;
+  box-shadow: 0 1px 4px rgba(60, 74, 51, 0.18);
+  padding: 14px 22px 10px;
+}
+
+.note-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #3c4a33;
+}
+
+.note-page-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.note-page-hospital {
+  font-weight: bold;
+  font-size: 13px;
+  color: #263c20;
+}
+
+.note-page-dept {
+  font-size: 11px;
+  color: #77805f;
+}
+
+.note-page-patient {
+  text-align: right;
+  font-size: 11px;
+  color: #2c3d25;
+  line-height: 1.5;
+}
+
+.note-page-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 6px;
+  border-top: 1px solid #cdd3b3;
+  color: #8a8f78;
+  font-style: italic;
+  font-size: 10.5px;
 }

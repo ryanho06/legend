@@ -28,6 +28,7 @@ import { mainTabs } from "./data/tabs";
 import patient from "./data/patient.json";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { htmlToPlainText, wordCount } from "./lib/noteText";
+import { USER_KEY, userNotesKey } from "./lib/session";
 import { buildUserNote } from "./lib/userNotes";
 import { saveWrapupAttempt } from "./lib/wrapupAttempt";
 import type {
@@ -62,10 +63,10 @@ function parseUserNotes(raw: string): ClinicalNote[] {
 }
 
 function App() {
-  const [storedUser, setStoredUser] = usePersistentState("legend-user", "");
+  const [storedUser, setStoredUser] = usePersistentState(USER_KEY, "");
   const user = parseUser(storedUser);
   const [storedUserNotes, setStoredUserNotes] = usePersistentState(
-    "legend-user-notes-cholangitis001",
+    userNotesKey("cholangitis001"),
     "[]",
   );
   const userNotes = parseUserNotes(storedUserNotes);

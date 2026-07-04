@@ -177,10 +177,14 @@ export function NotesBrowser({
       <div className="notes-split">
         <PanelGroup orientation="horizontal" className="notes-panels">
           <Panel
-            defaultSize="38%"
-            minSize="22%"
+            // Pixel-locked: resizing the window or outer panels leaves the
+            // list width alone; only the preview flexes.
+            defaultSize="340px"
+            minSize="250px"
+            maxSize="520px"
+            groupResizeBehavior="preserve-pixel-size"
             collapsible
-            collapsedSize="0%"
+            collapsedSize="0px"
             panelRef={listRef}
             onResize={() => setListCollapsed(listRef.current?.isCollapsed() ?? false)}
           >
@@ -202,7 +206,7 @@ export function NotesBrowser({
             </button>
           </PanelResizeHandle>
 
-          <Panel defaultSize="62%" minSize="35%">
+          <Panel minSize="35%" groupResizeBehavior="preserve-relative-size">
             <div className="preview-pane">
               {openNotes.length > 1 && (
                 <div className="preview-tabbar" role="tablist">

@@ -1,4 +1,4 @@
-import { CircleAlert, UserRound } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import type { Note } from "../../types";
 import { formatClinician } from "../../lib/clinician";
 
@@ -40,13 +40,7 @@ export function NoteList({
           className={note.id === selectedId ? "note-row selected" : "note-row"}
           onClick={() => onSelect(note.id)}
         >
-          <div className="note-row-avatar">
-            {note.authorRole.startsWith(".NURSE") ? (
-              <UserRound size={18} />
-            ) : (
-              initials(note.author)
-            )}
-          </div>
+          <div className="note-row-avatar">{initials(note.author)}</div>
 
           <div className="note-row-body">
             <div className="note-row-top">
