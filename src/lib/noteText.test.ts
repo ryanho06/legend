@@ -30,6 +30,12 @@ describe("htmlToPlainText", () => {
   test("returns plain text unchanged", () => {
     expect(htmlToPlainText("just plain text")).toBe("just plain text");
   });
+
+  test("keeps a leading unwrapped text node on its own line", () => {
+    // contentEditable leaves the first line as a bare text node.
+    const html = "Impression<div>Acute cholangitis</div><div>Plan</div>";
+    expect(htmlToPlainText(html)).toBe("Impression\nAcute cholangitis\nPlan");
+  });
 });
 
 describe("wordCount", () => {

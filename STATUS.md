@@ -16,10 +16,22 @@ Branch / worktree: main
   src/lib/rubric.ts, vitest wired up (`npm test`), 22 tests green, TDD (watched red
   first). tsc green; lint has only the pre-existing StickyNotePopup error.
 
+- Phase 2 (rubric content): 14 weighted items + model note in
+  src/data/patients/cholangitis001/rubric.ts; content tests pin the model note to
+  its own rubric and a dangerous note to both safety catches.
+- Phase 3 (Wrap-up UI): WrapUpModule + FeedbackReport wired into the wrapup tab.
+  Browser-verified end to end: draft -> submit -> unsafe-omission banner, category
+  hits/misses, conciseness, PDQI-9 chips, model-note reveal; last attempt persists
+  in localStorage. Found + fixed a real htmlToPlainText bug in the process (leading
+  unwrapped text node merged into the next line, killing section detection).
+
 ## In flight
-- Phase 2 of SPEC.md: author cholangitis001 rubric + model note
-  (src/data/patients/cholangitis001/rubric.ts), content derived from documents.ts /
-  encounters.ts. Then Phase 3: Wrap-up UI.
+- Nothing. Feature complete through SPEC Phase 3.
+
+## Ideas / later
+- Persist open note drafts (currently in-memory; a page reload drops them).
+- LLM judge layer for paraphrase-heavy rubric items (schema already judge-agnostic).
+- Second case once the hackathon story is set.
 
 ## Blocked / decisions needed
 - None.

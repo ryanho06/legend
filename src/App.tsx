@@ -17,6 +17,7 @@ import { PlaceholderModule } from "./components/PlaceholderModule";
 import { ResultsModule } from "./components/results/ResultsModule";
 import { StickyNotePopup } from "./components/StickyNotePopup";
 import { SummaryModule } from "./components/summary/SummaryModule";
+import { WrapUpModule } from "./components/wrapup/WrapUpModule";
 import {
   caseCholangitis001Documents,
   caseCholangitis001Notes,
@@ -146,10 +147,13 @@ function App() {
                   />
                 )}
 
+                {mainTab === "wrapup" && <WrapUpModule editors={editors} />}
+
                 {mainTab !== "summary" &&
                   mainTab !== "chart" &&
                   mainTab !== "results" &&
-                  mainTab !== "notes" && (
+                  mainTab !== "notes" &&
+                  mainTab !== "wrapup" && (
                     <PlaceholderModule
                       title={mainTabs.find((tab) => tab.key === mainTab)?.label ?? ""}
                     />

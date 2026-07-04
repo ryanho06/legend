@@ -2121,3 +2121,260 @@ button {
   font-style: italic;
   font-size: 11px;
 }
+
+/* ---------- Wrap-Up (note feedback) ---------- */
+
+.wrapup-module {
+  height: 100%;
+  overflow: auto;
+  background: #eef1da;
+  padding: 8px;
+}
+
+.wrapup-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wrapup-title-row h1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  margin: 0 0 8px;
+  color: #263c20;
+}
+
+.wrapup-disclaimer {
+  color: #8a8f78;
+  font-style: italic;
+  font-size: 11px;
+}
+
+.wrapup-report {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 860px;
+}
+
+.wrapup-card {
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.wrapup-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  background: #e7eecb;
+  border-bottom: 1px solid var(--line);
+  font-weight: bold;
+  color: #2c3d25;
+}
+
+.wrapup-card-body {
+  padding: 8px;
+  line-height: 1.4;
+}
+
+.wrapup-score-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.wrapup-score-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #263c20;
+}
+
+.wrapup-score-value span {
+  font-size: 13px;
+  font-weight: normal;
+}
+
+.wrapup-score-meta {
+  color: #5c6350;
+  font-size: 11px;
+  flex: 1;
+}
+
+.wrapup-reset,
+.wrapup-submit {
+  border: 1px solid #9aa37e;
+  background: #f3f6e4;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #2c3d25;
+}
+
+.wrapup-reset:hover,
+.wrapup-submit:hover {
+  background: #e7eecb;
+}
+
+.wrapup-submit {
+  margin-top: 8px;
+}
+
+.wrapup-submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.wrapup-unsafe {
+  border: 1px solid #b23b3b;
+  background: #fbeaea;
+  padding: 8px 10px;
+}
+
+.wrapup-unsafe-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: bold;
+  color: #8f1f1f;
+  margin-bottom: 4px;
+}
+
+.wrapup-unsafe-item {
+  color: #5a2323;
+  margin-bottom: 4px;
+}
+
+.wrapup-item {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  align-items: flex-start;
+}
+
+.wrapup-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  flex: none;
+  margin-top: 1px;
+}
+
+.wrapup-mark.hit {
+  background: #dcead0;
+  color: #2c5e1f;
+}
+
+.wrapup-mark.miss {
+  background: #f3dcdc;
+  color: #8f1f1f;
+}
+
+.wrapup-item-label em {
+  color: #77805f;
+  font-style: normal;
+  font-size: 11px;
+}
+
+.wrapup-item-explain {
+  color: #5c6350;
+  font-size: 11px;
+  margin-top: 2px;
+  max-width: 640px;
+}
+
+.wrapup-pdqi-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wrapup-pdqi-chip {
+  border: 1px solid #b9c19a;
+  background: #f3f6e4;
+  padding: 1px 8px;
+  border-radius: 9px;
+  font-size: 11px;
+  color: #2c3d25;
+}
+
+.wrapup-pdqi-note {
+  margin-top: 6px;
+  color: #8a8f78;
+  font-style: italic;
+  font-size: 11px;
+}
+
+.wrapup-model {
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.wrapup-model summary {
+  cursor: pointer;
+  padding: 5px 8px;
+  background: #e7eecb;
+  font-weight: bold;
+  color: #2c3d25;
+}
+
+.wrapup-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px;
+}
+
+.wrapup-compare-head {
+  font-weight: bold;
+  color: #263c20;
+  margin-bottom: 4px;
+}
+
+.wrapup-note-text {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 12px;
+  background: #fafbf2;
+  border: 1px solid var(--line);
+  padding: 8px;
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.wrapup-empty {
+  border: 1px dashed #9aa37e;
+  background: #fff;
+  color: #5c6350;
+  padding: 16px;
+  max-width: 560px;
+}
+
+.wrapup-draft-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  cursor: pointer;
+}
+
+.wrapup-draft-name {
+  font-weight: bold;
+  color: #263c20;
+}
+
+.wrapup-draft-meta {
+  color: #77805f;
+  font-size: 11px;
+}

@@ -8,7 +8,9 @@
 export function htmlToPlainText(html: string): string {
   return html
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(div|p|h[1-6]|li|blockquote)>/gi, "\n")
+    // Break on block OPENS, not closes: the first editor line is a bare text
+    // node, so "Impression<div>Plan</div>" must still split before "Plan".
+    .replace(/<(div|p|h[1-6]|li|blockquote)(\s[^>]*)?>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ")
     .replace(/&lt;/g, "<")
