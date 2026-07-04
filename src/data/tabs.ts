@@ -14,6 +14,7 @@ export const mainTabs: { key: MainTab; label: string }[] = [
 
 export const chartTabs: { key: ChartTab; label: string }[] = [
   { key: "encounters", label: "Encounters" },
+  { key: "notes", label: "Notes" },
   { key: "letters", label: "Letters" },
   { key: "edVisits", label: "ED Visits" },
   { key: "labs", label: "Labs" },

@@ -4,12 +4,22 @@ import {
   Printer,
   Stamp,
   Trash2,
+  X,
 } from "lucide-react";
 import type { Note } from "../../types";
 import { formatClinician } from "../../lib/clinician";
 
-/** Right-hand pane of the notes browser: read-only preview of the selected note. */
-export function NotePreview({ note }: { note: Note | null }) {
+/**
+ * Read-only preview of the selected note. Used both in the notes browser split
+ * and the right-rail document viewer; pass `onClose` to show a close control.
+ */
+export function NotePreview({
+  note,
+  onClose,
+}: {
+  note: Note | null;
+  onClose?: () => void;
+}) {
   if (!note) {
     return (
       <div className="note-preview note-preview-empty">
@@ -42,6 +52,14 @@ export function NotePreview({ note }: { note: Note | null }) {
           <Trash2 size={13} />
           Delete
         </button>
+        {onClose && (
+          <>
+            <div className="toolbar-spacer" />
+            <button title="Close" onClick={onClose}>
+              <X size={13} />
+            </button>
+          </>
+        )}
       </div>
 
       <div className="note-preview-scroll">

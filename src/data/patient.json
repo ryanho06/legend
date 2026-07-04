@@ -25,10 +25,11 @@
   "allergies": "Penicillin — rash",
   "isolation": "None",
   "code": "For escalation",
-  "acuity": "Sepsis screen positive",
-  "presentingComplaint": "Fever, RUQ pain and jaundice",
+  "acuity": "Sepsis screen positive — TG18 Grade II",
+  "presentingComplaint": "Central epigastric pain, rigors and new jaundice",
   "phone": "No mobile on file",
   "infection": "None recorded",
-  "bmi": "29.1",
-  "stickyNote": "Sepsis screen positive 09:20.\nChase blood cultures + lactate.\nConfirm abx given.\nAsk reg re ERCP today."
+  "bmi": "28.2 (was 32.0 in 01/2026)",
+  "stickyNote": "Atypical: EPIGASTRIC pain, not RUQ — don't anchor on dyspepsia.\nObstructive LFTs + fever + dilated CBD = cholangitis (TG18).\nLipase only mildly raised — not pancreatitis.\nPenicillin allergy — check abx! ED gave pip/taz.\nHOLD metformin (septic, ?lactate). Chase ERCP."
 }
+

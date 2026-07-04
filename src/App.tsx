@@ -12,12 +12,16 @@ import { MainTabBar } from "./components/layout/MainTabBar";
 import { TopSystemBar } from "./components/layout/TopSystemBar";
 import { NoteEditorPanel } from "./components/notes/NoteEditorPanel";
 import { PatientSidebar } from "./components/panels/PatientSidebar";
-import { ReportPanel } from "./components/panels/ReportPanel";
+import { DocumentPanel } from "./components/panels/DocumentPanel";
 import { PlaceholderModule } from "./components/PlaceholderModule";
+import { ResultsModule } from "./components/results/ResultsModule";
 import { StickyNotePopup } from "./components/StickyNotePopup";
 import { SummaryModule } from "./components/summary/SummaryModule";
-import { caseCholangitis001 } from "./data/patients/cholangitis001/reports";
-import { caseCholangitis001Notes } from "./data/patients/cholangitis001/notes";
+import {
+  caseCholangitis001Documents,
+  caseCholangitis001Notes,
+} from "./data/patients/cholangitis001/documents";
+import { caseCholangitis001Encounters } from "./data/patients/cholangitis001/encounters";
 import { mainTabs } from "./data/tabs";
 import patient from "./data/patient.json";
 import type { ChartTab, MainTab, NoteDraft } from "./types";
@@ -30,7 +34,7 @@ function App() {
   const [activeEditorId, setActiveEditorId] = useState<string | null>(null);
   const editorSeq = useRef(0);
   const [stickyOpen, setStickyOpen] = useState(false);
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const rightRef = useRef<PanelImperativeHandle>(null);
   const [rightCollapsed, setRightCollapsed] = useState(false);
 
@@ -41,8 +45,8 @@ function App() {
     else panel.collapse();
   }
 
-  const selectedReport = selectedReportId
-    ? caseCholangitis001[selectedReportId] ?? null
+  const selectedDocument = selectedDocId
+    ? caseCholangitis001Documents.find((doc) => doc.id === selectedDocId) ?? null
     : null;
 
   // Active draft falls back to the last-opened tab if the active one was closed.
@@ -94,9 +98,9 @@ function App() {
         onChangeNoteType={updateEditorNoteType}
       />
     ) : (
-      <ReportPanel
-        report={selectedReport}
-        onClose={() => setSelectedReportId(null)}
+      <DocumentPanel
+        document={selectedDocument}
+        onClose={() => setSelectedDocId(null)}
       />
     );
 
@@ -124,10 +128,16 @@ function App() {
                   <ChartReview
                     chartTab={chartTab}
                     setChartTab={setChartTab}
-                    selectedReportId={selectedReportId}
-                    onSelectReport={setSelectedReportId}
+                    encounters={caseCholangitis001Encounters}
+                    documents={caseCholangitis001Documents}
+                    notes={caseCholangitis001Notes}
+                    selectedDocId={selectedDocId}
+                    onSelectDocument={setSelectedDocId}
+                    onNewNote={openNewNote}
                   />
                 )}
+
+                {mainTab === "results" && <ResultsModule />}
 
                 {mainTab === "notes" && (
                   <NotesBrowser
@@ -136,11 +146,14 @@ function App() {
                   />
                 )}
 
-                {mainTab !== "summary" && mainTab !== "chart" && mainTab !== "notes" && (
-                  <PlaceholderModule
-                    title={mainTabs.find((tab) => tab.key === mainTab)?.label ?? ""}
-                  />
-                )}
+                {mainTab !== "summary" &&
+                  mainTab !== "chart" &&
+                  mainTab !== "results" &&
+                  mainTab !== "notes" && (
+                    <PlaceholderModule
+                      title={mainTabs.find((tab) => tab.key === mainTab)?.label ?? ""}
+                    />
+                  )}
               </div>
             </main>
           </Panel>

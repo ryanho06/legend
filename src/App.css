@@ -554,6 +554,37 @@ button {
   font-weight: bold;
 }
 
+.chart-filters {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  background: #f6f9de;
+  border-bottom: 1px solid #b8c19d;
+  overflow: hidden;
+}
+
+.chart-filters-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  color: #2b3d23;
+}
+
+.chart-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.chart-filter input {
+  cursor: pointer;
+}
+
 .yellow-notice {
   min-height: 28px;
   background: #fff56a;
@@ -609,6 +640,20 @@ button {
 .bookmark-col {
   width: 24px;
   text-align: center !important;
+}
+
+.bookmark-icon {
+  color: #b9c0a3;
+  vertical-align: middle;
+}
+
+.enc-when {
+  white-space: nowrap;
+}
+
+.enc-type-admission {
+  color: #b3261e;
+  font-weight: bold;
 }
 
 .date-group-row td {
@@ -1321,6 +1366,157 @@ button {
   margin: 0;
 }
 
+/* Structured result reports (labs, microbiology) */
+
+.report-banner {
+  border: 1px solid #c4caa9;
+  margin-bottom: 10px;
+}
+
+.report-banner-warn {
+  background: #fff56a;
+  border-bottom: 1px solid #c7c12d;
+  padding: 3px 8px;
+  font-weight: bold;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.report-banner-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+}
+
+.report-banner-brand {
+  font-size: 16px;
+  font-weight: bold;
+  color: #8c1d1d;
+  letter-spacing: 0.01em;
+}
+
+.report-banner-sub {
+  font-weight: bold;
+  color: #2b3d23;
+  margin-bottom: 3px;
+}
+
+.report-banner-pt {
+  text-align: right;
+}
+
+.report-banner-ptname {
+  font-weight: bold;
+  color: #222;
+}
+
+.report-banner-line {
+  color: #555;
+  font-size: 11px;
+}
+
+.result-panel-title {
+  font-weight: bold;
+  font-size: 13px;
+  color: #263c20;
+  border-bottom: 2px solid #b3bd99;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+.result-status {
+  color: #6a5a00;
+  font-weight: normal;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.result-table th {
+  text-align: left;
+  background: #eff2d8;
+  border-bottom: 1px solid #c4caa9;
+  padding: 3px 6px;
+  color: #2b3d23;
+}
+
+.result-table td {
+  border-bottom: 1px solid #e9ebd5;
+  padding: 3px 6px;
+}
+
+.result-value {
+  font-weight: bold;
+}
+
+.result-flag {
+  font-weight: bold;
+  color: #b3261e;
+  text-align: center;
+}
+
+.result-table tr.result-abn .result-value {
+  color: #b3261e;
+}
+
+.sens-S {
+  color: #1c7d3e;
+  font-weight: bold;
+  text-align: center;
+}
+
+.sens-R {
+  color: #b3261e;
+  font-weight: bold;
+  text-align: center;
+}
+
+.sens-I {
+  color: #8c6a00;
+  font-weight: bold;
+  text-align: center;
+}
+
+.micro-org-name {
+  font-weight: bold;
+  color: #8c1d1d;
+  margin: 6px 0 4px;
+}
+
+.result-text {
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
+.result-footer {
+  font-size: 11px;
+  color: #444;
+  border-top: 1px solid #dfe2c5;
+  padding-top: 6px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.result-footer-label {
+  color: #666;
+  font-weight: bold;
+}
+
+.result-disclaimer {
+  font-size: 10px;
+  color: #7a7f63;
+  font-style: italic;
+  border-top: 1px solid #dfe2c5;
+  padding-top: 6px;
+}
+
 /* Summary dashboard */
 
 .summary-module {
@@ -1612,4 +1808,316 @@ button {
 
 .lda-marker.lda-wound {
   background: #9d1c1c;
+}
+
+/* Results Review (Results tab) */
+
+.results-module {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fbfce8;
+}
+
+.results-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* Left category navigator */
+
+.results-tree {
+  flex: none;
+  width: 210px;
+  height: 100%;
+  overflow: auto;
+  background: #f6f9de;
+  border-right: 1px solid #a8b590;
+}
+
+.results-tree-head {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background: #e7eecb;
+  border-bottom: 1px solid var(--line);
+  font-weight: bold;
+  color: #2c3d25;
+}
+
+.results-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.results-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 23px;
+  padding-right: 6px;
+  cursor: pointer;
+  color: #2c3d25;
+  border-bottom: 1px solid #eef0dd;
+}
+
+.results-tree-row:hover {
+  background: #eef4d6;
+}
+
+.results-tree-row.selected {
+  background: #d7e8c0;
+  box-shadow: inset 3px 0 0 #5b7746;
+  font-weight: bold;
+}
+
+.results-tree-twisty {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #4f5942;
+  cursor: pointer;
+}
+
+.results-tree-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.results-tree-badge {
+  flex: none;
+  background: #f0d6d6;
+  color: #8a1212;
+  border: 1px solid #e0b4b4;
+  border-radius: 9px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* Right results pane */
+
+.results-content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  background: #fff;
+}
+
+.results-grid-wrap {
+  min-width: 520px;
+}
+
+.results-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.results-grid th {
+  position: sticky;
+  top: 0;
+  background: #ecefd5;
+  border: 1px solid #c4caa9;
+  padding: 2px 8px;
+  text-align: left;
+  color: #2b3d23;
+  z-index: 1;
+}
+
+.results-grid th.value-col {
+  text-align: center;
+  line-height: 1.15;
+}
+
+.result-col-date {
+  font-weight: bold;
+}
+
+.result-col-time {
+  font-weight: normal;
+  color: #4f5942;
+}
+
+.results-grid td {
+  height: 15px;
+  border: 1px solid #e9ebd6;
+  padding: 0 7px;
+  line-height: 15px;
+}
+
+.results-grid .component-col {
+  width: 210px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.results-grid .value-col {
+  text-align: center;
+  width: 76px;
+  white-space: nowrap;
+}
+
+/* Highlight the whole row on hover so the component name stays traceable. */
+.results-grid tbody tr:not(.result-group-row):hover > td {
+  background: #e6efd0;
+  cursor: default;
+}
+
+.results-grid td.abnormal {
+  font-weight: bold;
+  background: #fff0ee;
+}
+
+.results-grid td.abnormal.high {
+  color: #8a1212;
+}
+
+.results-grid td.abnormal.low {
+  color: #15498d;
+  background: #eef3fb;
+}
+
+.result-group-row td {
+  background: #f1f2dc;
+  color: #646b55;
+  font-weight: bold;
+  border-top: 2px solid #b3bd99;
+}
+
+/* Hover tooltip on a value cell (Epic-style result detail card) */
+
+.result-tooltip {
+  position: fixed;
+  z-index: 60;
+  width: 218px;
+  background: #fff;
+  border: 1px solid #9aa683;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  padding: 7px 9px;
+  pointer-events: none;
+  font-size: 11px;
+}
+
+.result-tooltip-name {
+  font-weight: bold;
+  color: #1f2d18;
+  font-size: 12px;
+}
+
+.result-tooltip-collected {
+  color: #6a7159;
+  margin: 1px 0 5px;
+}
+
+.result-tooltip-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #222;
+  line-height: 1.1;
+}
+
+.result-tooltip-flag {
+  font-size: 11px;
+  color: #8a1212;
+  margin-left: 3px;
+  vertical-align: super;
+}
+
+.result-tooltip-unit {
+  font-size: 11px;
+  font-weight: normal;
+  color: #6a7159;
+  margin-left: 5px;
+}
+
+.result-tooltip-ref {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid #e1e3cc;
+  color: #4f5942;
+}
+
+/* Narrative results (Microbiology, Imaging) */
+
+.narrative-results {
+  padding: 10px 12px;
+}
+
+.narrative-card {
+  border: 1px solid var(--line);
+  background: #fff;
+  margin-bottom: 8px;
+}
+
+.narrative-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: #e7eecb;
+  border-bottom: 1px solid var(--line);
+}
+
+.narrative-test {
+  font-weight: bold;
+  color: #2c3d25;
+}
+
+.narrative-status {
+  flex: none;
+  border-radius: 9px;
+  padding: 0 7px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #dfe9c5;
+  color: #3a5230;
+}
+
+.narrative-status.pending {
+  background: #fceeee;
+  color: #9d1c1c;
+  border: 1px solid #e0b4b4;
+}
+
+.narrative-status.preliminary {
+  background: #fff7d6;
+  color: #6a5a00;
+  border: 1px solid #d8cf8a;
+}
+
+.narrative-collected {
+  padding: 4px 8px 0;
+  color: #6a7159;
+  font-size: 11px;
+}
+
+.narrative-body {
+  margin: 0;
+  padding: 4px 8px 8px;
+  line-height: 1.45;
+}
+
+.results-disclaimer {
+  margin: 0;
+  padding: 8px 12px 12px;
+  color: #8a8f78;
+  font-style: italic;
+  font-size: 11px;
 }
