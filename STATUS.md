@@ -33,6 +33,12 @@ Branch / worktree: main
   on the ED notes, and multi-tab note preview for cross-referencing. All
   browser-verified end to end.
 
+- Reading-polish pass (05/07): note previews render as Epic-style letter pages
+  (hospital header, patient identifiers, disclaimer footer); display-time reflow
+  lib unwraps hard line breaks in authored bodies; notes list pixel-locked at
+  340px; sidebar slimmed to 172px; avatars always initials; user bubble = sign-out
+  (clears trainee localStorage and returns to the gate).
+
 ## In flight
 - Nothing. Prototype loop is demo-ready.
 
