@@ -2732,13 +2732,9 @@ button {
 }
 
 .wrapup-dock-panel {
+  position: relative;
   width: 440px;
   height: 60vh;
-  /* User-resizable (drag the bottom-right grip); bounded so it can't escape
-     the viewport. Bottom-anchored, so growing taller extends upward. */
-  resize: both;
-  min-width: 320px;
-  min-height: 220px;
   max-width: calc(100vw - 24px);
   max-height: 86vh;
   background: #eef1da;
@@ -2747,6 +2743,26 @@ button {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Resize grip on the TOP-RIGHT: the panel is bottom-left-anchored, so it grows
+   up and to the right. Drag toward the top-right corner to enlarge. */
+.wrapup-dock-resize {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nesw-resize;
+  z-index: 2;
+  background: linear-gradient(
+    45deg,
+    transparent 0 6px,
+    #cfe0b8 6px 8px,
+    transparent 8px 10px,
+    #cfe0b8 10px 12px,
+    transparent 12px
+  );
 }
 
 .wrapup-dock-head {
