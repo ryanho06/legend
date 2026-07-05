@@ -98,12 +98,25 @@ export function NotesBrowser({
     .filter((n): n is Note => Boolean(n));
   const activeNote = openNotes.find((n) => n.id === activePreviewId) ?? openNotes.at(-1) ?? null;
 
+  // Browser-tab behavior: on close, freeze the current per-tab width so the
+  // remaining close buttons stay under the cursor; re-flow once the pointer
+  // leaves the tab bar.
+  const tabbarRef = useRef<HTMLDivElement>(null);
+  const [frozenTabWidth, setFrozenTabWidth] = useState<number | null>(null);
+
   function openPreview(id: string) {
+    // Opening a tab is a fresh flow: drop any freeze left over from closing.
+    setFrozenTabWidth(null);
     setOpenIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setActivePreviewId(id);
   }
 
   function closePreview(id: string) {
+    // Freeze only while 2+ tabs remain (the bar hides at 1, so no stale width).
+    const firstTab = tabbarRef.current?.querySelector(".preview-tab");
+    setFrozenTabWidth(
+      firstTab && openNotes.length > 2 ? firstTab.getBoundingClientRect().width : null,
+    );
     setOpenIds((prev) => prev.filter((openId) => openId !== id));
   }
 
@@ -211,7 +224,12 @@ export function NotesBrowser({
           <Panel minSize="35%" groupResizeBehavior="preserve-relative-size">
             <div className="preview-pane">
               {openNotes.length > 1 && (
-                <div className="preview-tabbar" role="tablist">
+                <div
+                  className="preview-tabbar"
+                  role="tablist"
+                  ref={tabbarRef}
+                  onMouseLeave={() => setFrozenTabWidth(null)}
+                >
                   {openNotes.map((note) => (
                     <div
                       key={note.id}
@@ -219,6 +237,11 @@ export function NotesBrowser({
                         note.id === activeNote?.id
                           ? "preview-tab active"
                           : "preview-tab"
+                      }
+                      style={
+                        frozenTabWidth != null
+                          ? { flex: "none", width: frozenTabWidth, maxWidth: "none" }
+                          : undefined
                       }
                     >
                       <button

@@ -11,7 +11,7 @@ import type { Note } from "../../types";
 import { formatClinician } from "../../lib/clinician";
 import { reflowNoteBody } from "../../lib/reflow";
 import { SKIP_DELETE_CONFIRM_KEY } from "../../lib/session";
-import patient from "../../data/patient.json";
+import { LetterPage } from "../panels/LetterPage";
 
 /**
  * Read-only preview of the selected note, rendered as an Epic-style letter
@@ -95,25 +95,7 @@ export function NotePreview({
       </div>
 
       <div className="note-preview-scroll">
-        <div className="note-page">
-          <div className="note-page-header">
-            <div className="note-page-brand">
-              <span className="brand-logo">L</span>
-              <div>
-                <div className="note-page-hospital">Mount Verdant Hospital</div>
-                <div className="note-page-dept">{note.service}</div>
-              </div>
-            </div>
-            <div className="note-page-patient">
-              <div>
-                <strong>{patient.displayName}</strong> · {patient.sex}, {patient.age}
-              </div>
-              <div>
-                MRN {patient.caseId} · DOB {patient.dob}
-              </div>
-            </div>
-          </div>
-
+        <LetterPage deptLine={note.service}>
           <div className="note-preview-head">
             <div>
               <div className="note-preview-author">
@@ -153,15 +135,7 @@ export function NotePreview({
               {note.service}
             </div>
           )}
-
-          <div className="note-page-footer">
-            <span>
-              All patient data are synthetic. For education and simulation only.
-              Not for clinical use.
-            </span>
-            <span>Page 1 of 1</span>
-          </div>
-        </div>
+        </LetterPage>
       </div>
 
       {confirmOpen && (

@@ -25,9 +25,12 @@ type Candidate = {
 export function WrapUpModule({
   editors,
   userNotes,
+  embedded = false,
 }: {
   editors: NoteDraft[];
   userNotes: ClinicalNote[];
+  /** When docked in the floating panel, hide the module's own title row. */
+  embedded?: boolean;
 }) {
   const [storedAttempt, setStoredAttempt] = usePersistentState(
     attemptKey(rubric.caseId),
@@ -66,16 +69,18 @@ export function WrapUpModule({
   }
 
   return (
-    <div className="wrapup-module">
-      <div className="wrapup-title-row">
-        <h1>
-          <ClipboardCheck size={15} /> Wrap-Up — note feedback
-        </h1>
-        <span className="wrapup-disclaimer">
-          All patient data are synthetic. For education and simulation only. Not
-          for clinical use.
-        </span>
-      </div>
+    <div className={embedded ? "wrapup-module embedded" : "wrapup-module"}>
+      {!embedded && (
+        <div className="wrapup-title-row">
+          <h1>
+            <ClipboardCheck size={15} /> Wrap-Up — note feedback
+          </h1>
+          <span className="wrapup-disclaimer">
+            All patient data are synthetic. For education and simulation only. Not
+            for clinical use.
+          </span>
+        </div>
+      )}
 
       {attempt ? (
         <FeedbackReport

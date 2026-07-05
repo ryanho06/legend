@@ -18,7 +18,7 @@ import { ResultsModule } from "./components/results/ResultsModule";
 import { SignInPage } from "./components/SignInPage";
 import { StickyNotePopup } from "./components/StickyNotePopup";
 import { SummaryModule } from "./components/summary/SummaryModule";
-import { WrapUpModule } from "./components/wrapup/WrapUpModule";
+import { WrapUpDock } from "./components/wrapup/WrapUpDock";
 import {
   caseCholangitis001Documents,
   caseCholangitis001Notes,
@@ -70,12 +70,14 @@ function App() {
     "[]",
   );
   const userNotes = parseUserNotes(storedUserNotes);
-  const [mainTab, setMainTab] = useState<MainTab>("summary");
+  // Land on Notes so a fresh trainee immediately sees the write-a-note call to action.
+  const [mainTab, setMainTab] = useState<MainTab>("notes");
   const [chartTab, setChartTab] = useState<ChartTab>("encounters");
   const [editors, setEditors] = useState<NoteDraft[]>([]);
   const [activeEditorId, setActiveEditorId] = useState<string | null>(null);
   const editorSeq = useRef(0);
   const [stickyOpen, setStickyOpen] = useState(false);
+  const [wrapupOpen, setWrapupOpen] = useState(false);
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const rightRef = useRef<PanelImperativeHandle>(null);
   const [rightCollapsed, setRightCollapsed] = useState(false);
@@ -135,7 +137,7 @@ function App() {
     closeEditor(id);
     if (status === "signed") {
       saveWrapupAttempt("cholangitis001", text);
-      setMainTab("wrapup");
+      setWrapupOpen(true);
     }
   }
 
@@ -223,15 +225,10 @@ function App() {
                   />
                 )}
 
-                {mainTab === "wrapup" && (
-                  <WrapUpModule editors={editors} userNotes={userNotes} />
-                )}
-
                 {mainTab !== "summary" &&
                   mainTab !== "chart" &&
                   mainTab !== "results" &&
-                  mainTab !== "notes" &&
-                  mainTab !== "wrapup" && (
+                  mainTab !== "notes" && (
                     <PlaceholderModule
                       title={mainTabs.find((tab) => tab.key === mainTab)?.label ?? ""}
                     />
@@ -283,6 +280,14 @@ function App() {
       </div>
 
       {stickyOpen && <StickyNotePopup onClose={() => setStickyOpen(false)} />}
+
+      <WrapUpDock
+        open={wrapupOpen}
+        onToggle={() => setWrapupOpen((open) => !open)}
+        onClose={() => setWrapupOpen(false)}
+        editors={editors}
+        userNotes={userNotes}
+      />
     </div>
   );
 }

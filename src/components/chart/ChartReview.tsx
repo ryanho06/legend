@@ -4,7 +4,6 @@ import { TabStrip } from "../layout/TabStrip";
 import { chartTabs } from "../../data/tabs";
 import type { ChartTab, ClinicalDocument, Encounter, Note } from "../../types";
 import { EncounterTable } from "./EncounterTable";
-import { LabsPanel } from "./LabsPanel";
 import { NotesBrowser } from "./NotesBrowser";
 
 type FilterKey = "inpatient" | "outpatient" | "admissions" | "ed";
@@ -131,8 +130,7 @@ export function ChartReview({
         {chartTab === "notes" && (
           <NotesBrowser notes={notes} onNewNote={onNewNote} onDeleteNote={onDeleteNote} />
         )}
-        {chartTab === "labs" && <LabsPanel />}
-        {chartTab !== "encounters" && chartTab !== "notes" && chartTab !== "labs" && (
+        {chartTab !== "encounters" && chartTab !== "notes" && (
           <GenericChartTab label={chartTabs.find((t) => t.key === chartTab)?.label ?? ""} />
         )}
       </div>

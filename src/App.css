@@ -2519,10 +2519,11 @@ button {
   border: 1px solid var(--line);
   border-bottom: none;
   /* Equal-width tabs: close buttons line up, so several tabs can be
-     closed without chasing the mouse. */
+     closed without chasing the mouse. Capped narrow so two tabs don't
+     sprawl; on close the width is frozen inline until the pointer leaves. */
   flex: 1 1 0;
   min-width: 0;
-  max-width: 190px;
+  max-width: 132px;
 }
 
 .preview-tab.active {
@@ -2679,4 +2680,103 @@ button {
 .note-preview-toolbar .danger:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+/* ---------- Report preview (shared letter page) ---------- */
+
+.report-preview-title {
+  font-weight: bold;
+  color: #2c3d25;
+}
+
+.note-preview-title-line {
+  font-weight: bold;
+  font-size: 13px;
+  color: #263c20;
+  margin: 2px 0 6px;
+}
+
+/* ---------- Wrap-Up floating dock (note-feedback overlay) ---------- */
+
+.wrapup-dock {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.wrapup-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #2c5e1f;
+  background: #3e7a2c;
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(40, 60, 30, 0.35);
+}
+
+.wrapup-launcher:hover {
+  background: #356825;
+}
+
+.wrapup-launcher.active {
+  background: #2c5e1f;
+}
+
+.wrapup-dock-panel {
+  width: 440px;
+  max-width: calc(100vw - 24px);
+  max-height: 74vh;
+  background: #eef1da;
+  border: 1px solid #74885f;
+  box-shadow: 0 4px 18px rgba(40, 60, 30, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wrapup-dock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #3e7a2c;
+  color: #fff;
+  font-weight: bold;
+}
+
+.wrapup-dock-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wrapup-dock-head button {
+  border: none;
+  background: none;
+  color: #fff;
+  display: inline-flex;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.wrapup-dock-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Embedded (docked) module drops the module chrome: no full-height, tighter pad. */
+.wrapup-module.embedded {
+  height: auto;
+  background: transparent;
+  padding: 8px;
 }
