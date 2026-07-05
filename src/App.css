@@ -2733,8 +2733,14 @@ button {
 
 .wrapup-dock-panel {
   width: 440px;
+  height: 60vh;
+  /* User-resizable (drag the bottom-right grip); bounded so it can't escape
+     the viewport. Bottom-anchored, so growing taller extends upward. */
+  resize: both;
+  min-width: 320px;
+  min-height: 220px;
   max-width: calc(100vw - 24px);
-  max-height: 74vh;
+  max-height: 86vh;
   background: #eef1da;
   border: 1px solid #74885f;
   box-shadow: 0 4px 18px rgba(40, 60, 30, 0.4);
