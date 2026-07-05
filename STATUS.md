@@ -4,7 +4,7 @@
 
 Last updated: 2026-07-05
 Branch / worktree: main
-Latest session: Cloudflare Workers deploy (live at https://legend.ryanho1218.workers.dev)
+Latest session: Cloudflare Workers deploy (live at https://legend.ryanho06.workers.dev)
 Prior session commit range: 47ee20b..54a1ea1 (tab restructure + doc reconcile)
 Prior session: cce42a4..dc9f29b (note-feedback loop + prototype build)
 
@@ -28,10 +28,9 @@ Prior session: cce42a4..dc9f29b (note-feedback loop + prototype build)
   the same Epic stationery; preview tabs narrower + freeze-on-close.
 - Handoff doc reconciles (this session + prior): README, SPEC, CLAUDE.md match the code.
 - Live demo deployed to Cloudflare **Workers static assets** (not Pages; Pages is legacy
-  for new projects): https://legend.ryanho1218.workers.dev. Config in `wrangler.jsonc`
+  for new projects): https://legend.ryanho06.workers.dev. Config in `wrangler.jsonc`
   (`not_found_handling: "single-page-application"` handles deep links). Redeploy:
-  `npm run build` then `npx wrangler deploy`. Auth via `npx wrangler login`
-  (ryanho1218@gmail.com account).
+  `npm run build` then `npx wrangler deploy`. Auth via `npx wrangler login`.
 
 ## In flight
 - Nothing mid-change; the prototype loop is demo-ready.

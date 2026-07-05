@@ -31,17 +31,19 @@ export function SignInPage({ onComplete }: { onComplete: (user: UserProfile) => 
           First name
           <input
             autoFocus
+            name="forename"
             value={forename}
             onChange={(event) => setForename(event.target.value)}
-            placeholder="e.g. Amelia"
+            placeholder="e.g. Jordan"
           />
         </label>
         <label className="signin-field">
           Last name
           <input
+            name="surname"
             value={surname}
             onChange={(event) => setSurname(event.target.value)}
-            placeholder="e.g. Hart"
+            placeholder="e.g. Lee"
           />
         </label>
 

@@ -10,7 +10,7 @@ It recreates the parts of an electronic health record a student actually has to 
 
 ## Live demo
 
-**https://legend.ryanho1218.workers.dev**
+**https://legend.ryanho06.workers.dev**
 
 No account needed. Everything you write stays in your own browser (localStorage), so there is nothing to register and nothing to leak.
 

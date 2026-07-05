@@ -15,6 +15,7 @@ import { PatientSidebar } from "./components/panels/PatientSidebar";
 import { DocumentPanel } from "./components/panels/DocumentPanel";
 import { PlaceholderModule } from "./components/PlaceholderModule";
 import { ResultsModule } from "./components/results/ResultsModule";
+import { RotateGate } from "./components/RotateGate";
 import { SignInPage } from "./components/SignInPage";
 import { StickyNotePopup } from "./components/StickyNotePopup";
 import { SummaryModule } from "./components/summary/SummaryModule";
@@ -177,11 +178,17 @@ function App() {
     );
 
   if (!user) {
-    return <SignInPage onComplete={(profile) => setStoredUser(JSON.stringify(profile))} />;
+    return (
+      <>
+        <RotateGate />
+        <SignInPage onComplete={(profile) => setStoredUser(JSON.stringify(profile))} />
+      </>
+    );
   }
 
   return (
     <div className="legend-app">
+      <RotateGate />
       <TopSystemBar
         stickyOpen={stickyOpen}
         onToggleSticky={() => setStickyOpen((open) => !open)}

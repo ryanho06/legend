@@ -2376,6 +2376,58 @@ button {
 
 /* ---------- Sign-in gate ---------- */
 
+/* Narrow-portrait gate: the fixed sidebar makes portrait phones unusable,
+   so below this width in portrait we cover the app and ask for landscape. */
+.rotate-gate {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 799px) {
+  .rotate-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3c4a33;
+    padding: 24px;
+  }
+}
+
+.rotate-gate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 320px;
+  background: #eef1da;
+  border: 1px solid var(--line);
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.rotate-gate-icon {
+  color: #263c20;
+  transform: rotate(90deg);
+}
+
+.rotate-gate-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #263c20;
+}
+
+.rotate-gate-card p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #2c3d25;
+  margin: 0;
+}
+
 .signin-overlay {
   height: 100vh;
   display: flex;
