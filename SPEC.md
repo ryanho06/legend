@@ -3,8 +3,9 @@
 Status: DONE. All three phases shipped and browser-verified (commits 626be84,
 ca57026, 4a1efe7). One deviation from the plan below: plain-text extraction uses a
 string transform (`src/lib/noteText.ts`) rather than DOMParser, so node tests and the
-browser agree. Feedback lives in the Wrap-Up tab; Sign both publishes the note and
-opens the report. The remaining roadmap items (LLM judge, more cases) are in README.
+browser agree. Feedback lives in a floating "Performance" dock (`WrapUpDock`), not a
+main tab; Sign both publishes the note and opens the dock. The remaining roadmap items
+(LLM judge, more cases) are in README.
 
 Previous spec (Chart Review table redesign + encounter receipts): DONE, both phases
 verified in browser. Its decisions are folded into CLAUDE.md (Architecture, Gotchas).
@@ -91,10 +92,11 @@ Per-case content lives in `src/data/patients/cholangitis001/rubric.ts`.
 
 No React imports in either lib.
 
-## UI (Wrap-up tab)
+## UI (note-feedback surface)
 
-`MainTab` already has `"wrapup"`; replace its `PlaceholderModule` with
-`src/components/wrapup/WrapUpModule.tsx`:
+Design record: this originally shipped as a `"wrapup"` main tab, then moved to a
+floating "Performance" dock (`WrapUpDock`) since feedback is a training overlay, not an
+EMR activity. `WrapUpModule` (embeddable) is the shared body:
 
 1. Pick one of the open note drafts (reuse `NoteDraft[]` state lifted in `App.tsx`);
    empty state points the user at the Notes tab.

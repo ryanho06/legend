@@ -4,7 +4,8 @@
 
 Last updated: 2026-07-05
 Branch / worktree: main
-Session commit range: cce42a4..dc9f29b (9 commits)
+Latest session commit range: 47ee20b..54a1ea1 (tab restructure + doc reconcile)
+Prior session: cce42a4..dc9f29b (note-feedback loop + prototype build)
 
 ## Done
 - Restored the lost Chart Review + Results work from Claude Code file-history after
@@ -19,10 +20,23 @@ Session commit range: cce42a4..dc9f29b (9 commits)
   list, slim sidebar, sign-out via the user bubble.
 - Demo polish (dc9f29b): removed unused global search, deletable user notes with an
   "always ignore" confirm, "Mount Verdant Hospital" rename, equal-width preview tabs.
-- Handoff: reconciled README + SPEC + CLAUDE.md against the code (this session).
+- Tab restructure (5efaed9, 54a1ea1): land on Notes; Wrap-Up removed from the main tab
+  strip and moved to a floating, resizable "Performance" dock (WrapUpDock, opens on
+  Sign); "Results" tab relabeled "Labs & Tests" + redundant Labs chart sub-tab removed
+  (LabsPanel.tsx deleted); shared LetterPage extracted so note AND report previews use
+  the same Epic stationery; preview tabs narrower + freeze-on-close.
+- Handoff doc reconciles (this session + prior): README, SPEC, CLAUDE.md match the code.
 
 ## In flight
-- Nothing. Prototype loop is demo-ready for the hackathon.
+- Nothing mid-change; the prototype loop is demo-ready.
+
+## Next concrete step
+- Deploy a live demo to Cloudflare Pages. It's a static Vite SPA (no backend; all
+  state is localStorage), so: build with `npm run build` (outputs `dist/`), then
+  Cloudflare Pages with build command `npm run build`, output dir `dist`. Add an SPA
+  fallback (redirect `/*` -> `/index.html`) if deep links 404. No env vars or secrets.
+  A prior "deploy docs (Cloudflare Pages)" commit was made then dropped in an
+  accidental reset (see prior handoff); re-author fresh.
 
 ## Ideas / later
 - Persist open (unsigned) drafts; only signed/pended notes survive reload today.
@@ -46,4 +60,5 @@ Session commit range: cce42a4..dc9f29b (9 commits)
   tests and the browser agree.
 - NEVER leave verified work uncommitted (the June work sat 18 days and a hard reset
   destroyed it).
-- Nothing pushed this session; `git push` needs explicit approval.
+- Note feedback is a floating "Performance" dock (`WrapUpDock`), NOT a main tab; it
+  opens on Sign. If a doc or comment says "Wrap-Up tab", it's stale.
