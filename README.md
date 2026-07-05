@@ -8,6 +8,22 @@ It recreates the parts of an electronic health record a student actually has to 
 
 > **Status: early work in progress.** One synthetic case is fully built out; the app is under active development and deliberately rough around the edges.
 
+## Live demo
+
+**https://legend.ryanho1218.workers.dev**
+
+No account needed. Everything you write stays in your own browser (localStorage), so there is nothing to register and nothing to leak.
+
+A five-minute tour:
+
+1. **Sign in** with any first and last name.
+2. **Review the chart.** Skim Summary, then work through Chart Review: each encounter row opens its underlying document (imaging reports, lab and microbiology receipts, prior notes).
+3. **Write a note.** Open Notes, click New Note, and draft a ward-round progress note for the case.
+4. **Sign it.** The Performance dock opens and scores your note against the case rubric: required findings, unsafe omissions, structure, and conciseness. The model note unlocks after scoring, not before.
+5. **Reset** anytime via the user bubble (top right): it signs you out and clears your notes.
+
+One hint: read the allergy banner before you write the plan. The case is built to punish anchoring.
+
 ## Screenshots
 
 **Summary view** — patient banner, vitals trend, active problems, labs, meds, microbiology:
@@ -21,6 +37,10 @@ It recreates the parts of an electronic health record a student actually has to 
 **Student working view** — mid-task: reviewing existing notes, drafting a new progress note in the editor (right), with the sticky-note reasoning scratchpad open:
 
 ![Legend — student working view](docs/student-view.png)
+
+**Note feedback**: signing a note opens the Performance dock, which scores it against the case rubric. Here it credits the penicillin-allergy catch but flags an unsafe omission (metformin never documented as held):
+
+![Legend — Performance dock note feedback](docs/performance.png)
 
 ## Features
 
@@ -50,6 +70,8 @@ npm run lint     # eslint
 ```
 
 Then open the local URL Vite prints (default http://localhost:5173).
+
+The live demo is served as Cloudflare Workers static assets: `npm run build` then `npx wrangler deploy` (config in `wrangler.jsonc`).
 
 ## Status
 
