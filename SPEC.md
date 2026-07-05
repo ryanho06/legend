@@ -1,11 +1,15 @@
 # Spec: Note feedback loop (Wrap-up)
 
-Status: NOT STARTED. Prerequisite: commit the restored Chart Review + Results work
-currently sitting in the working tree (restored 04/07/2026 from session file-history
-after an accidental `git reset --hard`; tsc + lint verified green).
+Status: DONE. All three phases shipped and browser-verified (commits 626be84,
+ca57026, 4a1efe7). One deviation from the plan below: plain-text extraction uses a
+string transform (`src/lib/noteText.ts`) rather than DOMParser, so node tests and the
+browser agree. Feedback lives in the Wrap-Up tab; Sign both publishes the note and
+opens the report. The remaining roadmap items (LLM judge, more cases) are in README.
 
 Previous spec (Chart Review table redesign + encounter receipts): DONE, both phases
 verified in browser. Its decisions are folded into CLAUDE.md (Architecture, Gotchas).
+
+The plan below is kept as the design record of what shipped.
 
 ## Goal
 

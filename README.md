@@ -26,19 +26,19 @@ It recreates the parts of an electronic health record a student actually has to 
 
 - **Summary view** — patient banner, vitals chart and table, at-a-glance overview.
 - **Chart Review** — an Epic-style encounters table with filters (inpatient / outpatient / ED / admissions); every row opens a viewable document, including structured **lab** and **microbiology** reports.
-- **Notes** — a clinical notes browser and editor for practising documentation.
+- **Notes** — a clinical notes browser and editor for practising documentation: text search, multi-tab preview for cross-referencing, and letter-page rendering. Sign a note and it is published to the chart attributed to you; Pend files it as incomplete.
+- **Note feedback (Wrap-Up)** — signing a note scores it against a per-case rubric: required findings, unsafe omissions (this case hides a penicillin-allergy prescribing catch), section structure, and a conciseness band. The axes operationalize a subset of PDQI-9, the validated nine-dimension note-quality instrument (Stetson et al., 2012). The model note is revealed after scoring, not before, so it teaches rather than gets paraphrased.
 - **A worked teaching case** — an atypical cholangitis presentation (epigastric rather than RUQ pain, obstructive LFTs, a penicillin-allergy prescribing catch) designed to punish anchoring.
 - **Synthetic-only by design** — simulation disclaimers are built into the report banners, not bolted on.
 
 ## Roadmap
 
-- **Note feedback (next).** Score a submitted note against a per-case rubric: required findings, unsafe omissions (this case hides a penicillin-allergy prescribing catch), section structure, and a conciseness band. The axes operationalize a subset of PDQI-9, the validated nine-dimension note-quality instrument (Stetson et al., 2012). The model note is revealed after scoring, not before, so it teaches rather than gets paraphrased.
 - **LLM judge.** The rubric schema is judge-agnostic: deterministic matching ships first, and a Claude-based judge can later score the paraphrase-heavy items without a rewrite.
 - **More cases.** Once a case bundles chart data, a rubric, and a model note, new cases are data-only additions.
 
 ## Tech stack
 
-React 19 + TypeScript, built with Vite. Charts via Recharts, icons via lucide-react, resizable panes via react-resizable-panels. No backend: all case data is typed and static, so there is nothing to provision and no data to leak.
+React 19 + TypeScript, built with Vite. Charts via Recharts, icons via lucide-react, resizable panes via react-resizable-panels. Unit tests via Vitest (the pure scoring/reflow libs). No backend: case data is typed and static, and the trainee's identity and notes live in browser localStorage, so there is nothing to provision and no data to leak.
 
 ## Quickstart
 

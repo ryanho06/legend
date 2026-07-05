@@ -2,63 +2,48 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-04
+Last updated: 2026-07-05
 Branch / worktree: main
+Session commit range: cce42a4..dc9f29b (9 commits)
 
 ## Done
-- Chart Review redesign + encounter receipts + Results module: recovered from
-  Claude Code file-history after an accidental hard reset, verified green,
-  committed as 71d79a9.
-- Note-feedback loop specced in SPEC.md (rubric checklist scoring, PDQI-9 framing,
-  deterministic matcher first, LLM judge later).
-- README roadmap section added (cites PDQI-9 / Stetson 2012 for the hackathon story).
-- Phase 1 (scoring engine): rubric types in types.ts, src/lib/noteText.ts +
-  src/lib/rubric.ts, vitest wired up (`npm test`), 22 tests green, TDD (watched red
-  first). tsc green; lint has only the pre-existing StickyNotePopup error.
-
-- Phase 2 (rubric content): 14 weighted items + model note in
-  src/data/patients/cholangitis001/rubric.ts; content tests pin the model note to
-  its own rubric and a dangerous note to both safety catches.
-- Phase 3 (Wrap-up UI): WrapUpModule + FeedbackReport wired into the wrapup tab.
-  Browser-verified end to end: draft -> submit -> unsafe-omission banner, category
-  hits/misses, conciseness, PDQI-9 chips, model-note reveal; last attempt persists
-  in localStorage. Found + fixed a real htmlToPlainText bug in the process (leading
-  unwrapped text node merged into the next line, killing section detection).
-
-- Usable-prototype pass (04/07 late): sign-in gate captures the trainee's name
-  (localStorage, drives the top-right bubble + note authorship); Sign now publishes
-  the draft as a signed note in All Notes (attributed "SURNAME, Forename, MS /
-  *MEDICAL STUDENT") and auto-opens the Wrap-Up feedback report; Pend files it as
-  Incomplete. Notes QoL: text search across note content, red time-critical marks
-  on the ED notes, and multi-tab note preview for cross-referencing. All
-  browser-verified end to end.
-
-- Reading-polish pass (05/07): note previews render as Epic-style letter pages
-  (hospital header, patient identifiers, disclaimer footer); display-time reflow
-  lib unwraps hard line breaks in authored bodies; notes list pixel-locked at
-  340px; sidebar slimmed to 172px; avatars always initials; user bubble = sign-out
-  (clears trainee localStorage and returns to the gate).
+- Restored the lost Chart Review + Results work from Claude Code file-history after
+  an accidental hard reset, committed (71d79a9). Recovery recipe in project memory
+  ([[claude-file-history-recovery]]).
+- Note-feedback loop, all 3 SPEC phases shipped + browser-verified: scoring engine
+  (626be84), cholangitis001 rubric + model note (ca57026), Wrap-Up UI (4a1efe7).
+- Usable prototype (713ed9f): sign-in gate, Sign publishes a user note and opens
+  Wrap-Up feedback, Pend files Incomplete, notes text search / urgent marks /
+  multi-tab preview.
+- Reading polish (1306d4f): letter-page note rendering + reflow, pixel-locked notes
+  list, slim sidebar, sign-out via the user bubble.
+- Demo polish (dc9f29b): removed unused global search, deletable user notes with an
+  "always ignore" confirm, "Mount Verdant Hospital" rename, equal-width preview tabs.
+- Handoff: reconciled README + SPEC + CLAUDE.md against the code (this session).
 
 ## In flight
-- Nothing. Prototype loop is demo-ready.
+- Nothing. Prototype loop is demo-ready for the hackathon.
 
 ## Ideas / later
 - Persist open (unsigned) drafts; only signed/pended notes survive reload today.
 - LLM judge layer for paraphrase-heavy rubric items (schema already judge-agnostic).
-- Second case once the hackathon story is set.
-- Epic-inspired backlog from research: hover previews, "new since last viewed"
-  markers, AI chart summarization with citations.
+- SmartText note-editing helper (next editor feature after the demo).
+- Second case: once one case bundles documents.ts + encounters.ts + rubric.ts, new
+  cases are data-only.
+- Epic-inspired backlog: hover previews, "new since last viewed", AI chart summary.
 
 ## Blocked / decisions needed
 - None.
 
 ## Notes for next session
-- NEVER leave verified work uncommitted. The June work sat 18 days uncommitted and a
-  hard reset destroyed it; recovery recipe is in project memory
-  (claude-file-history-recovery).
-- Wrap-up tab already exists in MainTab ("wrapup") rendering PlaceholderModule; the
-  feedback UI replaces that in Phase 3.
-- Note drafts are in-memory only (App.tsx useState); the editor body is contentEditable
-  HTML, so scoring needs the noteText.ts plain-text extraction.
-- Pre-existing lint error in StickyNotePopup.tsx (react-hooks/immutability) predates
-  all of this; do not "fix" it as a drive-by.
+- Verify target: `npm test` (43 tests, 5 files), `npx tsc -b`, `npm run lint`.
+  Lint carries ONE pre-existing error in StickyNotePopup.tsx
+  (react-hooks/immutability) that predates all this work — do not "fix" as a drive-by.
+- Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
+  reload or they're lost. Signed/pended user notes persist in localStorage.
+- The editor body is contentEditable HTML; scoring/reflow go through the pure libs
+  (`noteText.ts`, `reflow.ts`), which use string transforms not DOMParser so node
+  tests and the browser agree.
+- NEVER leave verified work uncommitted (the June work sat 18 days and a hard reset
+  destroyed it).
+- Nothing pushed this session; `git push` needs explicit approval.
