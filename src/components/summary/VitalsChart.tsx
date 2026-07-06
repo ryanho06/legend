@@ -9,7 +9,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { vitalsTrend } from "../../data/summary";
+import type { VitalsPoint } from "../../types";
+import { useCase } from "../../context/CaseContext";
 
 const BP_COLOR = "#8e6fb8";
 
@@ -21,13 +22,7 @@ const SERIES = [
   { key: "tempC", name: "Temp (°C)", color: "#3f4f9e", unit: "°C" },
 ] as const;
 
-type VitalsRow = (typeof vitalsTrend)[number] & { bp: [number, number] };
-
-const data: VitalsRow[] = vitalsTrend.map((d) => ({ ...d, bp: [d.dia, d.sys] }));
-
-// Shared scale for every series, so the left and right axes read identically.
-const yValues = vitalsTrend.flatMap((d) => [d.sys, d.dia, d.hr, d.resp, d.spo2, d.tempC]);
-const Y_DOMAIN: [number, number] = [Math.min(...yValues) - 8, Math.max(...yValues) + 14];
+type VitalsRow = VitalsPoint & { bp: [number, number] };
 
 /** Down triangle marker for systolic BP. */
 function SysDot({ cx, cy }: { cx?: number; cy?: number }) {
@@ -72,6 +67,13 @@ function VitalsTooltip({
 }
 
 export function VitalsChart() {
+  const { vitalsTrend } = useCase().summary;
+  const data: VitalsRow[] = vitalsTrend.map((d) => ({ ...d, bp: [d.dia, d.sys] }));
+
+  // Shared scale for every series, so the left and right axes read identically.
+  const yValues = vitalsTrend.flatMap((d) => [d.sys, d.dia, d.hr, d.resp, d.spo2, d.tempC]);
+  const yDomain: [number, number] = [Math.min(...yValues) - 8, Math.max(...yValues) + 14];
+
   return (
     <ResponsiveContainer width="100%" height={220}>
       <ComposedChart data={data} margin={{ top: 22, right: 8, bottom: 0, left: 0 }}>
@@ -83,7 +85,7 @@ export function VitalsChart() {
           axisLine={{ stroke: "#cdd3b3" }}
         />
         <YAxis
-          domain={Y_DOMAIN}
+          domain={yDomain}
           tick={{ fontSize: 10, fill: "#888" }}
           tickLine={false}
           axisLine={false}
@@ -92,7 +94,7 @@ export function VitalsChart() {
         <YAxis
           yAxisId="right"
           orientation="right"
-          domain={Y_DOMAIN}
+          domain={yDomain}
           tick={{ fontSize: 10, fill: "#888" }}
           tickLine={false}
           axisLine={false}

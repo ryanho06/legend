@@ -1,16 +1,22 @@
 import { Bell, Menu, StickyNote } from "lucide-react";
 import { signOut } from "../../lib/session";
-import type { UserProfile } from "../../types";
+import type { CasePatient, UserProfile } from "../../types";
 
 export function TopSystemBar({
   stickyOpen,
   onToggleSticky,
   user,
+  activePatient,
 }: {
   stickyOpen: boolean;
   onToggleSticky: () => void;
   user: UserProfile;
+  /** Drives the environment banner; absent when no chart is open. */
+  activePatient?: CasePatient;
 }) {
+  const environment = activePatient
+    ? `TRAINING — ${activePatient.specialty} — ${activePatient.forename} ${activePatient.surname}`
+    : "TRAINING — MOUNT VERDANT HOSPITAL";
   return (
     <header className="top-system-bar">
       <div className="top-left">
@@ -21,9 +27,7 @@ export function TopSystemBar({
           <span className="brand-logo">L</span>
           <span className="brand-text">LegendCare</span>
         </div>
-        <span className="environment-text">
-          TRAINING — REHAB / ORTHO / GENERAL SURGERY — AMELIA HART
-        </span>
+        <span className="environment-text">{environment.toUpperCase()}</span>
       </div>
 
       <div className="top-right">

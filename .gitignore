@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 
+references
+
 # Wrangler local state
 .wrangler/
 .dev.vars

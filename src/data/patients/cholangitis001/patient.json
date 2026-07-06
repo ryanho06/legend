@@ -7,7 +7,7 @@
   "sex": "Female",
   "age": 64,
   "dob": "14/03/1961",
-  "caseId": "LEG-000001",
+  "mrn": "LEG-000001",
   "location": "AMU Bay 3",
   "specialty": "General Surgery",
   "attending": {

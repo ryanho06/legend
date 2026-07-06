@@ -9,20 +9,21 @@ import {
   Scale,
   Syringe,
 } from "lucide-react";
-import patient from "../../data/patient.json";
-import { bloods } from "../../data/chart";
-import {
-  activeProblems,
-  firstWeight,
-  ipMeds,
-  linesDrains,
-  microbiology,
-  weights,
-} from "../../data/summary";
+import { useCase } from "../../context/CaseContext";
 import { BodySilhouette } from "./BodySilhouette";
 import { VitalsPanel } from "./VitalsPanel";
 
 export function SummaryModule() {
+  const { patient, bloods, summary } = useCase();
+  const {
+    workingDiagnosis,
+    activeProblems,
+    firstWeight,
+    ipMeds,
+    linesDrains,
+    microbiology,
+    weights,
+  } = summary;
   return (
     <div className="summary-module">
       <div className="summary-title-row">
@@ -34,7 +35,7 @@ export function SummaryModule() {
           <p className="summary-text">
             {patient.age}
             {patient.sex.charAt(0)} with {patient.presentingComplaint.toLowerCase()}.{" "}
-            {patient.acuity}. Working diagnosis: acute cholangitis with sepsis physiology.
+            {patient.acuity}. Working diagnosis: {workingDiagnosis}.
           </p>
         </SummaryCard>
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import patient from "../../data/patient.json";
+import { useCase } from "../../context/CaseContext";
 
 /**
  * Epic-style letter "page" chrome: hospital header (logo + department),
@@ -14,6 +14,7 @@ export function LetterPage({
   deptLine: string;
   children: ReactNode;
 }) {
+  const { patient } = useCase();
   return (
     <div className="note-page">
       <div className="note-page-header">
@@ -29,7 +30,7 @@ export function LetterPage({
             <strong>{patient.displayName}</strong> · {patient.sex}, {patient.age}
           </div>
           <div>
-            MRN {patient.caseId} · DOB {patient.dob}
+            MRN {patient.mrn} · DOB {patient.dob}
           </div>
         </div>
       </div>

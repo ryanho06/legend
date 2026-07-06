@@ -6,13 +6,15 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { Star, X } from "lucide-react";
-import patient from "../data/patient.json";
+import { useCase } from "../context/CaseContext";
 import { usePersistentState } from "../hooks/usePersistentState";
 
-const STORAGE_KEY = `legend.sticky.${patient.caseId}`;
-
 export function StickyNotePopup({ onClose }: { onClose: () => void }) {
-  const [text, setText] = usePersistentState(STORAGE_KEY, patient.stickyNote);
+  const { patient } = useCase();
+  const [text, setText] = usePersistentState(
+    `legend.sticky.${patient.mrn}`,
+    patient.stickyNote,
+  );
   const [pos, setPos] = useState({ x: window.innerWidth - 300, y: 96 });
   const dragOffset = useRef<{ dx: number; dy: number } | null>(null);
 

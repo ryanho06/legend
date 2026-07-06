@@ -1,4 +1,4 @@
-import patient from "../../data/patient.json";
+import { useCase } from "../../context/CaseContext";
 
 /**
  * Institution / patient header for structured result reports (labs, micro),
@@ -12,6 +12,7 @@ export function ReportBanner({
   reportType: string;
   reportedAt: string;
 }) {
+  const { patient } = useCase();
   return (
     <div className="report-banner">
       <div className="report-banner-warn">
@@ -28,7 +29,7 @@ export function ReportBanner({
         </div>
         <div className="report-banner-pt">
           <div className="report-banner-ptname">
-            {patient.displayName} · {patient.caseId}
+            {patient.displayName} · {patient.mrn}
           </div>
           <div className="report-banner-line">
             {patient.sex}, {patient.age} yrs · DOB {patient.dob}

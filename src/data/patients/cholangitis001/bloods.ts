@@ -1,9 +1,12 @@
+import type { BloodRow } from "../../../types";
+
 /**
- * Recent bloods shown under Chart Review > Labs. Cholestatic (obstructive) LFT
- * pattern with a systemic inflammatory response — note the only mildly raised
- * lipase, which argues against primary pancreatitis as the cause of the pain.
+ * Recent bloods shown on Summary and reused by the admission lab receipt in
+ * documents.ts (single source, no drift). Cholestatic (obstructive) LFT pattern
+ * with a systemic inflammatory response — note the only mildly raised lipase,
+ * which argues against primary pancreatitis as the cause of the pain.
  */
-export const bloods = [
+export const bloods: BloodRow[] = [
   { test: "WCC", value: "17.4", range: "4.0–11.0", flag: "High" },
   { test: "Neutrophils", value: "15.1", range: "2.0–7.5", flag: "High" },
   { test: "CRP", value: "214", range: "<5", flag: "High" },

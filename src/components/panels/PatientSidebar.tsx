@@ -1,7 +1,8 @@
 import { UserRound } from "lucide-react";
-import patient from "../../data/patient.json";
+import { useCase } from "../../context/CaseContext";
 
 export function PatientSidebar() {
+  const { patient } = useCase();
   return (
     <aside className="patient-sidebar">
       <div className="patient-avatar">{patient.initials}</div>
@@ -10,7 +11,7 @@ export function PatientSidebar() {
       <div className="patient-subtitle">
         {patient.sex}, {patient.age} / {patient.dob}
       </div>
-      <div className="patient-subtitle">MRN: {patient.caseId}</div>
+      <div className="patient-subtitle">MRN: {patient.mrn}</div>
 
       <div className="sidebar-rows">
         <SideInfo label="Location" value={patient.location} />

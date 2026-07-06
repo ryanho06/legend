@@ -1,6 +1,7 @@
-import { vitalsTrend } from "../../data/summary";
+import { useCase } from "../../context/CaseContext";
 
 export function VitalsTable() {
+  const { vitalsTrend } = useCase().summary;
   return (
     <table className="summary-table">
       <thead>

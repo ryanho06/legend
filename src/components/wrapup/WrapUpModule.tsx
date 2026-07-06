@@ -6,7 +6,7 @@ import { htmlToPlainText, wordCount } from "../../lib/noteText";
 import { scoreNote } from "../../lib/rubric";
 import { formatStamp } from "../../lib/userNotes";
 import { attemptKey, parseAttempt, type StoredAttempt } from "../../lib/wrapupAttempt";
-import { caseCholangitis001Rubric as rubric } from "../../data/patients/cholangitis001/rubric";
+import { useCase } from "../../context/CaseContext";
 import type { ClinicalNote, NoteDraft } from "../../types";
 import { FeedbackReport } from "./FeedbackReport";
 
@@ -32,6 +32,7 @@ export function WrapUpModule({
   /** When docked in the floating panel, hide the module's own title row. */
   embedded?: boolean;
 }) {
+  const { rubric } = useCase();
   const [storedAttempt, setStoredAttempt] = usePersistentState(
     attemptKey(rubric.caseId),
     "",

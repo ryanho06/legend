@@ -1,5 +1,5 @@
 import type { ClinicalDocument, LabFlag, LabRow } from "../../../types";
-import { bloods } from "../../chart";
+import { bloods } from "./bloods";
 
 /** SI units for the admission panel, keyed by `bloods` test name. */
 const ADMISSION_LAB_UNITS: Record<string, string> = {

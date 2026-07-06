@@ -260,6 +260,119 @@ export type CaseRubric = {
   modelNote: string;
 };
 
+/** A named clinician on the sidebar care team (attending, GP). */
+export type CareTeamMember = {
+  forename: string;
+  surname: string;
+  credential: string;
+  specialty: string;
+};
+
+/** Per-case patient demographics and banner content (the case's patient.json). */
+export type CasePatient = {
+  surname: string;
+  forename: string;
+  displayName: string;
+  initials: string;
+  pronouns: string;
+  sex: string;
+  age: number;
+  /** DD/MM/YYYY. */
+  dob: string;
+  /** Synthetic case MRN, e.g. "LEG-000001". */
+  mrn: string;
+  location: string;
+  specialty: string;
+  attending: CareTeamMember;
+  primaryCare: CareTeamMember;
+  allergies: string;
+  isolation: string;
+  code: string;
+  acuity: string;
+  presentingComplaint: string;
+  phone: string;
+  infection: string;
+  bmi: string;
+  /** Seed content for the trainee's sticky-note scratchpad. */
+  stickyNote: string;
+};
+
+/** One timepoint on the Summary vitals trend. */
+export type VitalsPoint = {
+  t: string;
+  sys: number;
+  dia: number;
+  hr: number;
+  resp: number;
+  spo2: number;
+  tempC: number;
+};
+
+export type IpMed = {
+  medication: string;
+  conc: string;
+  method: string;
+  freq: string;
+  lastDose: string;
+};
+
+export type WeightEntry = { when: string; value: string };
+
+export type MicroSummaryEntry = { date: string; time: string; state: string };
+
+export type LineDrain = {
+  label: string;
+  kind: "line" | "drain" | "wound";
+  days: number;
+  /** Position over the body silhouette, as a percentage of its box. */
+  x?: number;
+  y?: number;
+};
+
+/** One row of the recent-bloods table (Summary + the admission lab receipt). */
+export type BloodRow = {
+  test: string;
+  value: string;
+  range: string;
+  flag: string;
+};
+
+/** Everything the Summary dashboard renders for a case. */
+export type CaseSummary = {
+  /** Completes "Working diagnosis: ..." on the Patient Summary card. */
+  workingDiagnosis: string;
+  vitalsTrend: VitalsPoint[];
+  activeProblems: string[];
+  ipMeds: IpMed[];
+  weights: WeightEntry[];
+  firstWeight: WeightEntry;
+  microbiology: MicroSummaryEntry[];
+  linesDrains: LineDrain[];
+  diseaseReports: string[];
+};
+
+/**
+ * One complete training case: everything the app needs to open a patient.
+ * Registered in src/data/patients/index.ts; adding a case is a folder plus one
+ * registry entry (see CASE_AUTHORING.md).
+ */
+export type CaseBundle = {
+  /** Folder name under src/data/patients/, e.g. "cholangitis001". */
+  id: string;
+  /** Patient-list grouping, e.g. "General Surgery". */
+  specialty: string;
+  /** One-line handoff summary shown in the patient list row. */
+  handoff: string;
+  patient: CasePatient;
+  documents: ClinicalDocument[];
+  /** kind:"note" subset of documents (static pre-authored notes). */
+  notes: ClinicalNote[];
+  encounters: Encounter[];
+  rubric: CaseRubric;
+  summary: CaseSummary;
+  bloods: BloodRow[];
+};
+
 export type RubricItemResult = {
   item: RubricItem;
   matched: boolean;

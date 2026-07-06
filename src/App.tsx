@@ -20,13 +20,9 @@ import { SignInPage } from "./components/SignInPage";
 import { StickyNotePopup } from "./components/StickyNotePopup";
 import { SummaryModule } from "./components/summary/SummaryModule";
 import { WrapUpDock } from "./components/wrapup/WrapUpDock";
-import {
-  caseCholangitis001Documents,
-  caseCholangitis001Notes,
-} from "./data/patients/cholangitis001/documents";
-import { caseCholangitis001Encounters } from "./data/patients/cholangitis001/encounters";
+import { CaseContext } from "./context/CaseContext";
+import { getCase } from "./data/patients";
 import { mainTabs } from "./data/tabs";
-import patient from "./data/patient.json";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { htmlToPlainText, wordCount } from "./lib/noteText";
 import { USER_KEY, userNotesKey } from "./lib/session";
@@ -66,8 +62,10 @@ function parseUserNotes(raw: string): ClinicalNote[] {
 function App() {
   const [storedUser, setStoredUser] = usePersistentState(USER_KEY, "");
   const user = parseUser(storedUser);
+  // Single active case for now; Phase 2 of the multi-case spec makes this dynamic.
+  const activeCase = getCase("cholangitis001");
   const [storedUserNotes, setStoredUserNotes] = usePersistentState(
-    userNotesKey("cholangitis001"),
+    userNotesKey(activeCase.id),
     "[]",
   );
   const userNotes = parseUserNotes(storedUserNotes);
@@ -91,8 +89,8 @@ function App() {
   }
 
   // User-authored notes join the case content in every view.
-  const allDocuments = [...caseCholangitis001Documents, ...userNotes];
-  const allNotes = [...caseCholangitis001Notes, ...userNotes];
+  const allDocuments = [...activeCase.documents, ...userNotes];
+  const allNotes = [...activeCase.notes, ...userNotes];
 
   const selectedDocument = selectedDocId
     ? allDocuments.find((doc) => doc.id === selectedDocId) ?? null
@@ -104,6 +102,7 @@ function App() {
 
   function openNewNote() {
     editorSeq.current += 1;
+    const { patient } = activeCase;
     const draft: NoteDraft = {
       id: `draft-${editorSeq.current}`,
       noteType: "Progress Note",
@@ -137,7 +136,7 @@ function App() {
     setStoredUserNotes(JSON.stringify([...userNotes, note]));
     closeEditor(id);
     if (status === "signed") {
-      saveWrapupAttempt("cholangitis001", text);
+      saveWrapupAttempt(activeCase.id, text);
       setWrapupOpen(true);
     }
   }
@@ -187,12 +186,14 @@ function App() {
   }
 
   return (
+    <CaseContext.Provider value={activeCase}>
     <div className="legend-app">
       <RotateGate />
       <TopSystemBar
         stickyOpen={stickyOpen}
         onToggleSticky={() => setStickyOpen((open) => !open)}
         user={user}
+        activePatient={activeCase.patient}
       />
 
       <div className="ehr-workspace">
@@ -212,7 +213,7 @@ function App() {
                   <ChartReview
                     chartTab={chartTab}
                     setChartTab={setChartTab}
-                    encounters={caseCholangitis001Encounters}
+                    encounters={activeCase.encounters}
                     documents={allDocuments}
                     notes={allNotes}
                     selectedDocId={selectedDocId}
@@ -296,6 +297,7 @@ function App() {
         userNotes={userNotes}
       />
     </div>
+    </CaseContext.Provider>
   );
 }
 
