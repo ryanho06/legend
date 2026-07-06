@@ -211,6 +211,19 @@ export type NoteDraft = {
   body: string;
 };
 
+/**
+ * The parts of a patient workspace that survive switching away and back:
+ * held per case in App, passed into PatientWorkspace as controlled state.
+ */
+export type CaseUiState = {
+  mainTab: MainTab;
+  chartTab: ChartTab;
+  selectedDocId: string | null;
+  editors: NoteDraft[];
+  activeEditorId: string | null;
+  wrapupOpen: boolean;
+};
+
 /** PDQI-9 note-quality dimensions (Stetson et al., 2012). */
 export type PdqiDimension =
   | "up-to-date"

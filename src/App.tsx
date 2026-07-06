@@ -1,41 +1,15 @@
-import { useRef, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  Group as PanelGroup,
-  Panel,
-  Separator as PanelResizeHandle,
-  type PanelImperativeHandle,
-} from "react-resizable-panels";
-import { ChartReview } from "./components/chart/ChartReview";
-import { NotesBrowser } from "./components/chart/NotesBrowser";
-import { MainTabBar } from "./components/layout/MainTabBar";
+import { useState } from "react";
+import { PatientTabBar } from "./components/layout/PatientTabBar";
 import { TopSystemBar } from "./components/layout/TopSystemBar";
-import { NoteEditorPanel } from "./components/notes/NoteEditorPanel";
-import { PatientSidebar } from "./components/panels/PatientSidebar";
-import { DocumentPanel } from "./components/panels/DocumentPanel";
-import { PlaceholderModule } from "./components/PlaceholderModule";
-import { ResultsModule } from "./components/results/ResultsModule";
+import { PatientListPage } from "./components/patients/PatientListPage";
+import { PatientWorkspace } from "./components/PatientWorkspace";
 import { RotateGate } from "./components/RotateGate";
 import { SignInPage } from "./components/SignInPage";
-import { StickyNotePopup } from "./components/StickyNotePopup";
-import { SummaryModule } from "./components/summary/SummaryModule";
-import { WrapUpDock } from "./components/wrapup/WrapUpDock";
 import { CaseContext } from "./context/CaseContext";
 import { getCase } from "./data/patients";
-import { mainTabs } from "./data/tabs";
 import { usePersistentState } from "./hooks/usePersistentState";
-import { htmlToPlainText, wordCount } from "./lib/noteText";
-import { USER_KEY, userNotesKey } from "./lib/session";
-import { buildUserNote } from "./lib/userNotes";
-import { saveWrapupAttempt } from "./lib/wrapupAttempt";
-import type {
-  ChartTab,
-  ClinicalNote,
-  MainTab,
-  NoteDraft,
-  NoteStatus,
-  UserProfile,
-} from "./types";
+import { USER_KEY } from "./lib/session";
+import type { CaseUiState, UserProfile } from "./types";
 import "./App.css";
 
 function parseUser(raw: string): UserProfile | null {
@@ -50,131 +24,59 @@ function parseUser(raw: string): UserProfile | null {
   }
 }
 
-function parseUserNotes(raw: string): ClinicalNote[] {
-  try {
-    const parsed = JSON.parse(raw) as ClinicalNote[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+// Land on Notes so a fresh trainee immediately sees the write-a-note call to action.
+const DEFAULT_UI: CaseUiState = {
+  mainTab: "notes",
+  chartTab: "encounters",
+  selectedDocId: null,
+  editors: [],
+  activeEditorId: null,
+  wrapupOpen: false,
+};
 
 function App() {
   const [storedUser, setStoredUser] = usePersistentState(USER_KEY, "");
   const user = parseUser(storedUser);
-  // Single active case for now; Phase 2 of the multi-case spec makes this dynamic.
-  const activeCase = getCase("cholangitis001");
-  const [storedUserNotes, setStoredUserNotes] = usePersistentState(
-    userNotesKey(activeCase.id),
-    "[]",
-  );
-  const userNotes = parseUserNotes(storedUserNotes);
-  // Land on Notes so a fresh trainee immediately sees the write-a-note call to action.
-  const [mainTab, setMainTab] = useState<MainTab>("notes");
-  const [chartTab, setChartTab] = useState<ChartTab>("encounters");
-  const [editors, setEditors] = useState<NoteDraft[]>([]);
-  const [activeEditorId, setActiveEditorId] = useState<string | null>(null);
-  const editorSeq = useRef(0);
+
+  // Open charts (patient tabs) + which one is focused. null focus with tabs
+  // still open means the trainee is browsing the Patient Lists activity.
+  const [openCaseIds, setOpenCaseIds] = useState<string[]>([]);
+  const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
+  // Cross-switch workspace state per case (tabs, drafts, feedback dock).
+  const [caseUi, setCaseUi] = useState<Record<string, CaseUiState>>({});
   const [stickyOpen, setStickyOpen] = useState(false);
-  const [wrapupOpen, setWrapupOpen] = useState(false);
-  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
-  const rightRef = useRef<PanelImperativeHandle>(null);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
 
-  function toggleRightPanel() {
-    const panel = rightRef.current;
-    if (!panel) return;
-    if (panel.isCollapsed()) panel.expand();
-    else panel.collapse();
+  const activeCase = activeCaseId ? getCase(activeCaseId) : null;
+
+  function openCase(id: string) {
+    setOpenCaseIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setActiveCaseId(id);
   }
 
-  // User-authored notes join the case content in every view.
-  const allDocuments = [...activeCase.documents, ...userNotes];
-  const allNotes = [...activeCase.notes, ...userNotes];
-
-  const selectedDocument = selectedDocId
-    ? allDocuments.find((doc) => doc.id === selectedDocId) ?? null
-    : null;
-
-  // Active draft falls back to the last-opened tab if the active one was closed.
-  const activeEditor =
-    editors.find((draft) => draft.id === activeEditorId) ?? editors.at(-1) ?? null;
-
-  function openNewNote() {
-    editorSeq.current += 1;
-    const { patient } = activeCase;
-    const draft: NoteDraft = {
-      id: `draft-${editorSeq.current}`,
-      noteType: "Progress Note",
-      service: `(A) ${patient.specialty} — ${patient.location.split(" ")[0]}`,
-      body: "",
-    };
-    setEditors((prev) => [...prev, draft]);
-    setActiveEditorId(draft.id);
-    // Make sure the editor is visible even if the right panel was collapsed.
-    rightRef.current?.expand();
-  }
-
-  function closeEditor(id: string) {
-    setEditors((prev) => prev.filter((draft) => draft.id !== id));
-  }
-
-  function deleteUserNote(id: string) {
-    setStoredUserNotes(JSON.stringify(userNotes.filter((note) => note.id !== id)));
-    if (selectedDocId === id) setSelectedDocId(null);
-  }
-
-  // Sign publishes the draft as a signed note and opens Wrap-Up feedback on
-  // it; Pend files it as an incomplete note. Both remove the draft tab.
-  function finishDraft(id: string, status: NoteStatus) {
-    if (!user) return;
-    const draft = editors.find((d) => d.id === id);
-    if (!draft) return;
-    const text = htmlToPlainText(draft.body);
-    if (wordCount(text) === 0) return;
-    const note = buildUserNote(draft, user, text, status, new Date());
-    setStoredUserNotes(JSON.stringify([...userNotes, note]));
-    closeEditor(id);
-    if (status === "signed") {
-      saveWrapupAttempt(activeCase.id, text);
-      setWrapupOpen(true);
+  function closeCase(id: string) {
+    const remaining = openCaseIds.filter((openId) => openId !== id);
+    setOpenCaseIds(remaining);
+    // Discard the closed chart's in-memory state (drafts included; signed and
+    // pended notes are already in localStorage).
+    setCaseUi((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (activeCaseId === id) {
+      // Focus the neighbour; with no tabs left the Patient Lists page shows.
+      const closedAt = openCaseIds.indexOf(id);
+      setActiveCaseId(remaining[closedAt] ?? remaining.at(-1) ?? null);
     }
   }
 
-  function updateEditorBody(id: string, body: string) {
-    setEditors((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, body } : draft)),
-    );
+  function patchActiveUi(patch: Partial<CaseUiState>) {
+    if (!activeCaseId) return;
+    setCaseUi((prev) => ({
+      ...prev,
+      [activeCaseId]: { ...(prev[activeCaseId] ?? DEFAULT_UI), ...patch },
+    }));
   }
-
-  function updateEditorNoteType(id: string, noteType: string) {
-    setEditors((prev) =>
-      prev.map((draft) => (draft.id === id ? { ...draft, noteType } : draft)),
-    );
-  }
-
-  // Right-rail content: the note editor when drafts are open, else the report
-  // viewer. Rendered in the panel when expanded, or as a faded hover preview in
-  // the edge fly-out when collapsed — exactly one of the two, so its state is
-  // single and nothing is lost on collapse.
-  const rightContent =
-    editors.length > 0 ? (
-      <NoteEditorPanel
-        editors={editors}
-        activeId={activeEditor?.id ?? null}
-        onSelect={setActiveEditorId}
-        onClose={closeEditor}
-        onChangeBody={updateEditorBody}
-        onChangeNoteType={updateEditorNoteType}
-        onSign={(id) => finishDraft(id, "signed")}
-        onPend={(id) => finishDraft(id, "incomplete")}
-      />
-    ) : (
-      <DocumentPanel
-        document={selectedDocument}
-        onClose={() => setSelectedDocId(null)}
-      />
-    );
 
   if (!user) {
     return (
@@ -186,118 +88,37 @@ function App() {
   }
 
   return (
-    <CaseContext.Provider value={activeCase}>
     <div className="legend-app">
       <RotateGate />
       <TopSystemBar
         stickyOpen={stickyOpen}
         onToggleSticky={() => setStickyOpen((open) => !open)}
+        onMenu={() => setActiveCaseId(null)}
         user={user}
-        activePatient={activeCase.patient}
+        activePatient={activeCase?.patient}
       />
 
-      <div className="ehr-workspace">
-        <div className="fixed-sidebar">
-          <PatientSidebar />
-        </div>
-
-        <PanelGroup orientation="horizontal" className="workspace-panels">
-          <Panel defaultSize="72%" minSize="45%">
-            <main className="center-shell">
-              <MainTabBar selected={mainTab} onSelect={setMainTab} />
-
-              <div className="module-body">
-                {mainTab === "summary" && <SummaryModule />}
-
-                {mainTab === "chart" && (
-                  <ChartReview
-                    chartTab={chartTab}
-                    setChartTab={setChartTab}
-                    encounters={activeCase.encounters}
-                    documents={allDocuments}
-                    notes={allNotes}
-                    selectedDocId={selectedDocId}
-                    onSelectDocument={setSelectedDocId}
-                    onNewNote={openNewNote}
-                    onDeleteNote={deleteUserNote}
-                  />
-                )}
-
-                {mainTab === "results" && <ResultsModule />}
-
-                {mainTab === "notes" && (
-                  <NotesBrowser
-                    notes={allNotes}
-                    onNewNote={openNewNote}
-                    onDeleteNote={deleteUserNote}
-                  />
-                )}
-
-                {mainTab !== "summary" &&
-                  mainTab !== "chart" &&
-                  mainTab !== "results" &&
-                  mainTab !== "notes" && (
-                    <PlaceholderModule
-                      title={mainTabs.find((tab) => tab.key === mainTab)?.label ?? ""}
-                    />
-                  )}
-              </div>
-            </main>
-          </Panel>
-
-          <PanelResizeHandle className="resize-handle skinny">
-            {!rightCollapsed && (
-              <button
-                className="handle-collapse"
-                aria-label="Hide side panel"
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={toggleRightPanel}
-              >
-                <ChevronRight size={12} />
-              </button>
-            )}
-          </PanelResizeHandle>
-
-          <Panel
-            defaultSize="28%"
-            minSize="18%"
-            maxSize="42%"
-            collapsible
-            collapsedSize="0%"
-            panelRef={rightRef}
-            onResize={() => setRightCollapsed(rightRef.current?.isCollapsed() ?? false)}
-          >
-            <div className="right-panel-frame">{!rightCollapsed && rightContent}</div>
-          </Panel>
-        </PanelGroup>
-
-        {rightCollapsed && (
-          <div className="right-flyout-zone">
-            <div className="right-flyout">
-              <button
-                className="right-flyout-expand"
-                aria-label="Show side panel"
-                onClick={toggleRightPanel}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <div className="right-flyout-preview">{rightContent}</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {stickyOpen && <StickyNotePopup onClose={() => setStickyOpen(false)} />}
-
-      <WrapUpDock
-        open={wrapupOpen}
-        onToggle={() => setWrapupOpen((open) => !open)}
-        onClose={() => setWrapupOpen(false)}
-        editors={editors}
-        userNotes={userNotes}
+      <PatientTabBar
+        tabs={openCaseIds.map((id) => ({ id, label: getCase(id).patient.displayName }))}
+        activeId={activeCaseId}
+        onSelect={setActiveCaseId}
+        onClose={closeCase}
       />
+
+      {activeCase ? (
+        <CaseContext.Provider value={activeCase} key={activeCase.id}>
+          <PatientWorkspace
+            user={user}
+            ui={caseUi[activeCase.id] ?? DEFAULT_UI}
+            onPatch={patchActiveUi}
+            stickyOpen={stickyOpen}
+            onCloseSticky={() => setStickyOpen(false)}
+          />
+        </CaseContext.Provider>
+      ) : (
+        <PatientListPage openIds={openCaseIds} onOpen={openCase} />
+      )}
     </div>
-    </CaseContext.Provider>
   );
 }
 

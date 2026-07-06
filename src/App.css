@@ -2376,6 +2376,227 @@ button {
 
 /* ---------- Sign-in gate ---------- */
 
+/* ---------- Patient tabs + Patient Lists activity ---------- */
+
+/* Open-chart tabs, directly below the top system bar (Epic chart tabs). */
+.patient-tabbar {
+  flex: none;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  background: #cdd8ae;
+  border-bottom: 1px solid #74885f;
+  padding: 3px 6px 0;
+}
+
+.patient-tab {
+  display: flex;
+  align-items: center;
+  background: #e3ebc8;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  /* Equal-width tabs (see .preview-tab): close buttons line up; on close the
+     width is frozen inline until the pointer leaves the bar. */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 176px;
+}
+
+.patient-tab.active {
+  background: var(--cream);
+  font-weight: bold;
+}
+
+.patient-tab-label {
+  border: none;
+  background: none;
+  padding: 4px 2px 4px 8px;
+  font-size: 11.5px;
+  cursor: pointer;
+  color: #2c3d25;
+  font-weight: inherit;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.patient-tab-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px 5px 0 2px;
+  color: #55663f;
+}
+
+.patient-tab-close:hover {
+  color: var(--red);
+}
+
+/* Full-screen Patient Lists activity (no chart open / hamburger). */
+.patient-list-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: var(--cream);
+}
+
+.patient-list-rail {
+  flex: none;
+  width: 200px;
+  background: #eef1da;
+  border-right: 1px solid var(--line);
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.patient-list-rail-title {
+  font-weight: bold;
+  color: #263c20;
+  margin-bottom: 4px;
+}
+
+.patient-list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 5px 6px;
+  cursor: pointer;
+  text-align: left;
+  color: #2c3d25;
+  border-radius: 3px;
+}
+
+.patient-list-item:hover {
+  background: #e3ebc8;
+}
+
+.patient-list-item.active {
+  background: #d8e2b7;
+  font-weight: bold;
+}
+
+.patient-list-item-name {
+  flex: 1;
+}
+
+.patient-list-item-count {
+  background: #c2cf9b;
+  border-radius: 8px;
+  padding: 0 7px;
+  font-size: 10.5px;
+}
+
+.patient-list-rail-note {
+  margin-top: auto;
+  font-size: 10.5px;
+  color: #77805f;
+}
+
+.patient-list-main {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-list-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.patient-list-head h1 {
+  font-size: 16px;
+  margin: 0;
+  color: #263c20;
+}
+
+.patient-list-sub {
+  color: #55663f;
+}
+
+.patient-list-search {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 3px 8px;
+  color: #999;
+  font-size: 11px;
+}
+
+.patient-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.patient-list-table th {
+  text-align: left;
+  background: #dfe7c2;
+  border-bottom: 1px solid var(--line);
+  padding: 5px 8px;
+  font-size: 11px;
+  color: #2c3d25;
+}
+
+.patient-list-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid #e2e6cd;
+}
+
+.patient-list-table tbody tr {
+  cursor: pointer;
+}
+
+/* Epic's selected-row yellow, as the hover affordance. */
+.patient-list-table tbody tr:hover {
+  background: var(--yellow);
+}
+
+.patient-list-name {
+  font-weight: bold;
+}
+
+.patient-list-open-tag {
+  margin-left: 8px;
+  font-weight: normal;
+  font-size: 10px;
+  color: #3e5d33;
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  background: #e3ebc8;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+.patient-list-handoff {
+  color: #444;
+}
+
+.patient-list-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 10.5px;
+  color: #77805f;
+  font-style: italic;
+}
+
 /* Narrow-portrait gate: the fixed sidebar makes portrait phones unusable,
    so below this width in portrait we cover the app and ask for landscape. */
 .rotate-gate {

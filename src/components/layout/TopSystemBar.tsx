@@ -5,11 +5,14 @@ import type { CasePatient, UserProfile } from "../../types";
 export function TopSystemBar({
   stickyOpen,
   onToggleSticky,
+  onMenu,
   user,
   activePatient,
 }: {
   stickyOpen: boolean;
   onToggleSticky: () => void;
+  /** Opens the Patient Lists activity. */
+  onMenu: () => void;
   user: UserProfile;
   /** Drives the environment banner; absent when no chart is open. */
   activePatient?: CasePatient;
@@ -20,7 +23,12 @@ export function TopSystemBar({
   return (
     <header className="top-system-bar">
       <div className="top-left">
-        <button className="icon-button dark">
+        <button
+          className="icon-button dark"
+          aria-label="Patient Lists"
+          title="Patient Lists"
+          onClick={onMenu}
+        >
           <Menu size={17} />
         </button>
         <div className="brand-chip">
@@ -31,14 +39,16 @@ export function TopSystemBar({
       </div>
 
       <div className="top-right">
-        <button
-          className={stickyOpen ? "top-pill sticky-toggle active" : "top-pill sticky-toggle"}
-          onClick={onToggleSticky}
-          aria-pressed={stickyOpen}
-        >
-          <StickyNote size={14} />
-          Sticky Note
-        </button>
+        {activePatient && (
+          <button
+            className={stickyOpen ? "top-pill sticky-toggle active" : "top-pill sticky-toggle"}
+            onClick={onToggleSticky}
+            aria-pressed={stickyOpen}
+          >
+            <StickyNote size={14} />
+            Sticky Note
+          </button>
+        )}
 
         <Bell size={16} />
         <button
@@ -50,7 +60,7 @@ export function TopSystemBar({
                 "Sign out? This clears your notes and feedback so the next trainee starts fresh.",
               )
             ) {
-              signOut("cholangitis001");
+              signOut();
             }
           }}
         >
