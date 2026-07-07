@@ -106,7 +106,9 @@ Note: 11 of these case folders are uncommitted user WIP. Their rubric.ts edits a
 
 ## CASE_AUTHORING.md
 
-Document the `task` contract (codes, labels, minGrade semantics) and authoring guidance for FY-level cases: hospital-day-2+ progress-note scenarios (`code: "progress"`, `minGrade: "fy"`), where the twist is recognizable and escalatable at FY level.
+Document the `task` contract (codes, labels, minGrade semantics) and authoring guidance for the two tiers cowork generates next:
+- FY-level: hospital-day-2+ progress-note scenarios (`code: "progress"`, `minGrade: "fy"`), where the twist is recognizable and escalatable at FY level.
+- Consultant-level (`minGrade: "consultant"`): complex multi-problem post-takes, ceiling-of-care and end-of-life decisions, major complications after intervention, cross-specialty conflict — cases where the scored skill is judgment and ownership of the decision, not recognition alone. Case content itself is authored via cowork, not in this feature.
 
 ## Testing
 
