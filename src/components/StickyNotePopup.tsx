@@ -64,32 +64,30 @@ export function StickyNotePopup({ onClose }: { onClose: () => void }) {
   // re-subscribing (drag-end save, ResizeObserver).
   const layoutRef = useRef(layout);
   const dragOffset = useRef<{ dx: number; dy: number } | null>(null);
-  const stopDraggingRef = useRef<(() => void) | null>(null);
 
   useLayoutEffect(() => {
     layoutRef.current = layout;
   }, [layout]);
 
   const onPointerMove = useCallback((event: PointerEvent) => {
-    if (!dragOffset.current) return;
+    const offset = dragOffset.current;
+    if (!offset) return;
     setLayout((prev) => ({
       ...prev,
-      x: event.clientX - dragOffset.current!.dx,
-      y: event.clientY - dragOffset.current!.dy,
+      x: event.clientX - offset.dx,
+      y: event.clientY - offset.dy,
     }));
   }, []);
 
-  const stopDragging = useCallback(() => {
-    if (dragOffset.current) saveLayout(layoutRef.current);
-    dragOffset.current = null;
-    window.removeEventListener("pointermove", onPointerMove);
-    const fn = stopDraggingRef.current;
-    if (fn) window.removeEventListener("pointerup", fn);
-  }, [onPointerMove]);
-
-  useEffect(() => {
-    stopDraggingRef.current = stopDragging;
-  }, [stopDragging]);
+  const stopDragging = useCallback(
+    function stopDragging() {
+      if (dragOffset.current) saveLayout(layoutRef.current);
+      dragOffset.current = null;
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", stopDragging);
+    },
+    [onPointerMove],
+  );
 
   const startDragging = (event: ReactPointerEvent<HTMLDivElement>) => {
     // Don't start a drag when the close button is pressed.
@@ -99,13 +97,10 @@ export function StickyNotePopup({ onClose }: { onClose: () => void }) {
       dy: event.clientY - layoutRef.current.y,
     };
     window.addEventListener("pointermove", onPointerMove);
-    const fn = stopDraggingRef.current;
-    if (fn) window.addEventListener("pointerup", fn);
+    window.addEventListener("pointerup", stopDragging);
   };
 
-  useEffect(() => () => {
-    stopDraggingRef.current?.();
-  }, []);
+  useEffect(() => stopDragging, [stopDragging]);
 
   // Capture CSS `resize: both` drags and persist the new size.
   useEffect(() => {
