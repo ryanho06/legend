@@ -88,7 +88,9 @@ export const caseCholangitis001Rubric: CaseRubric = {
       weight: 8,
       triggers: [
         [["obstructive", "cholestatic"], ["lfts", "lft", "liver", "picture", "pattern"]],
-        [["bilirubin", "bili"], ["alp", "ggt"]],
+        // Interpretive words required: the PROGRESS template auto-embeds the raw
+        // "Bilirubin 96" / "ALP 402" / "GGT 388" lab lines, which must not score alone.
+        [["bilirubin", "bili"], ["alp", "ggt"], ["obstructive", "cholestatic"]],
       ],
       explanation:
         "Bilirubin 96 with ALP 402 and GGT 388 against ALT 128 is cholestatic, pointing at duct obstruction rather than a hepatitic process.",
@@ -114,7 +116,9 @@ export const caseCholangitis001Rubric: CaseRubric = {
       category: "findings",
       weight: 6,
       triggers: [
-        [["lipase"], ["mildly", "mild", "only", "slightly", "92", "normal"]],
+        // Interpretive words required: the PROGRESS template auto-embeds the raw
+        // "Lipase 92 ... High (mild)" lab line, which must not score alone.
+        [["lipase"], ["mildly", "only", "slightly", "normal"]],
         [["pancreatitis"], ["against", "not", "unlikely", "excluded", "ruled"]],
       ],
       explanation:
@@ -183,7 +187,9 @@ export const caseCholangitis001Rubric: CaseRubric = {
       weight: 5,
       triggers: [
         [["fluids", "fluid", "crystalloid"]],
-        [["lactate"], ["repeat", "recheck", "monitor", "trend", "6"]],
+        // Interpretive phrase required: the PROGRESS template auto-embeds "Lactate
+        // 2.6", whose lone "6" digit must not satisfy this alongside "lactate".
+        [["lactate"], ["repeat", "recheck", "monitor", "trend", "6 hours", "6h"]],
       ],
       explanation:
         "IV fluids continue with hourly urine output, and lactate / LFTs are repeated at 6 hours to prove the trajectory is right.",
@@ -195,7 +201,12 @@ export const caseCholangitis001Rubric: CaseRubric = {
       category: "plan",
       weight: 5,
       triggers: [
-        [["vte", "thromboprophylaxis", "prophylaxis", "dalteparin", "enoxaparin"]],
+        // Interpretive words required: the PROGRESS template's "DVT prophylaxis:"
+        // footer must not satisfy this by itself.
+        [
+          ["vte", "thromboprophylaxis", "prophylaxis", "dalteparin", "enoxaparin"],
+          ["pre procedure", "pre ercp", "before the procedure", "deliberate", "not a checkbox"],
+        ],
       ],
       explanation:
         "VTE assessment is outstanding, and the timing matters: INR 1.3 and platelets 132 pre-ERCP make the prophylaxis decision a deliberate one, not a checkbox.",
