@@ -8,26 +8,32 @@ Status: approved
 Make NotePreview's decorative Addendum button functional for notes the trainee owns:
 
 - Incomplete notes you filed (Pend): button reads **Edit** and reopens the note in the note editor pane so it can be finished and re-filed.
-- Complete notes you authored (your signed notes, plus static case notes flagged as yours, e.g. `note-prog-003` in cholangitis001): **Addendum** opens an editor tab whose signed text is appended to the note's addendum block.
+- Complete notes you authored (your signed notes, plus static case notes whose author ID matches the persona you play, e.g. `note-prog-003` in cholangitis001): **Addendum** opens an editor tab whose signed text is appended to the note's addendum block.
 
 ## Non-goals
 
-- No editing of static case notes (even `mine` ones); static content is immutable. Only the addendum overlay grows.
+- No editing of static case notes (even persona-owned ones); static content is immutable. Only the addendum overlay grows.
+- No ID sweep across all cases and staff surfaces now; `authorId` is optional, populated where ownership matters (cholangitis001 first). A full staff-ID sweep is future work.
 - No cosign workflow changes; the Cosign button stays decorative.
 - No rubric scoring of addenda; the Performance dock is for full notes only.
 
-## Ownership model
+## Ownership model: HCP IDs
 
-- `ClinicalNote` gains `mine?: boolean`, set by case authors on notes the trainee persona wrote. This is a deliberate storytelling choice per case ("you are the resident on this team"), documented in CASE_AUTHORING.md.
-- Ownership rule (pure helper in `src/lib/userNotes.ts`): `isOwnNote(note) = note.mine === true || note.id.startsWith("user-note-")`.
-- `note-prog-003` in `src/data/patients/cholangitis001/documents.ts` gets `mine: true`.
+Every person can carry a stable clinician identifier (synthetic staff ID, format `HCP-` + 6 digits, analogous to the `LEG-` MRNs). Ownership is an ID comparison, which scales to future accounts and multiplayer.
+
+- `UserProfile` gains `hcpId: string`, generated once at sign-in (random `HCP-9#####`, persisted with the profile in `legend-user`). Future account systems replace generation with server-assigned IDs; nothing else changes.
+- `ClinicalNote` gains `authorId?: string`. Notes without one are ownable by nobody (today's behavior for all static notes). `buildUserNote` stamps `authorId: user.hcpId` on trainee-filed notes.
+- Each case may declare the persona the trainee plays: `playerHcpId?: string` on `CaseBundle` (set in the registry entry). This is the piece a bare ID comparison cannot provide: the case saying "in this chart, you are this resident". Documented in CASE_AUTHORING.md.
+- Ownership rule (pure helper in `src/lib/userNotes.ts`):
+  `isOwnNote(note, userHcpId, playerHcpId) = !!note.authorId && (note.authorId === userHcpId || note.authorId === playerHcpId)`, with a backstop: user notes are also recognized by their `user-note-` id prefix so stored notes filed before this change keep working.
+- cholangitis001: Mensah, Daniel gets an HCP ID; his notes (including `note-prog-003`) get `authorId`, and the case registry entry sets `playerHcpId` to it. Other cases and staff surfaces (encounters, care team) can adopt IDs later; the field is optional everywhere, so partial population is safe.
 
 ## Button rules (NotePreview)
 
 Follows the existing Delete pattern: the parent passes a callback only when the action is allowed; the button disables with a tooltip otherwise.
 
 - `note.status === "incomplete"` and the note is a user note (`user-note-` prefix): the Addendum slot renders as **Edit** (pencil icon), live.
-- `note.status` is `signed` or `cosign` and `isOwnNote(note)`: **Addendum**, live.
+- `note.status` is `signed` or `cosign` and `isOwnNote(...)` is true: **Addendum**, live.
 - Anything else: **Addendum**, disabled, tooltip "Only your own notes can be addended".
 - New optional props: `onEdit?: () => void`, `onAddendum?: () => void`. Wired through `NotesBrowser` (both the Notes activity and Chart Review > Notes render it) the same way `onDelete` flows today. `DocumentPanel`'s NotePreview stays read-only (no callbacks), matching Delete.
 
@@ -47,7 +53,7 @@ Follows the existing Delete pattern: the parent passes a callback only when the 
 - Opening: empty draft, `mode: "addendum"`, `targetNoteId`, `noteType: "Addendum"`, service copied from the target note. If an addendum draft for that note is already open, focus it.
 - Editor in addendum mode: tab labelled "Addendum", the note-type dropdown is replaced by a fixed "Addendum" label, the Pend button is hidden (addenda are signed directly, as in Epic), SmartText and the wildcard Sign gate still work.
 - Signing appends a stamped block to the note's addendum overlay and closes the tab. No Performance dock. Block format matches the existing static addendum style:
-  `ADDENDUM — Surname, Forename, MS — DD/MM HH:MM:` followed by the text. Multiple addenda stack separated by blank lines.
+  `ADDENDUM — Surname, Forename, MS — DD/MM/YYYY HH:MM:` followed by the text. Multiple addenda stack separated by blank lines.
 
 ## Addendum storage
 
@@ -57,5 +63,5 @@ Follows the existing Delete pattern: the parent passes a callback only when the 
 
 ## Testing
 
-- Vitest (`src/lib` convention): `plainTextToEditorHtml` (escaping, div/blank-line structure, `***` chip reconstitution), `isOwnNote`, the addendum block builder (stamp format, stacking), and the edit-refile helper (id/author preserved, status/body/stamps updated).
+- Vitest (`src/lib` convention): `plainTextToEditorHtml` (escaping, div/blank-line structure, `***` chip reconstitution), `isOwnNote` (authorId match vs user, vs player persona, missing authorId, prefix backstop), the addendum block builder (stamp format, stacking), and the edit-refile helper (id/author preserved, status/body/stamps updated).
 - Browser verify at the end: pend a SmartText note with chips, Edit it, confirm chips are back and Sign stays gated; sign it and confirm scoring; add two addenda to `note-prog-003` and confirm they stack under the attending attestation; confirm Addendum is disabled on a colleague's note.
