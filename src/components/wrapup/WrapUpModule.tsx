@@ -2,12 +2,13 @@ import { useState } from "react";
 import { ClipboardCheck } from "lucide-react";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import { formatClinician } from "../../lib/clinician";
+import { gradeLabel, isOverreach } from "../../lib/grades";
 import { htmlToPlainText, wordCount } from "../../lib/noteText";
 import { scoreNote } from "../../lib/rubric";
 import { formatStamp } from "../../lib/userNotes";
 import { attemptKey, parseAttempt, type StoredAttempt } from "../../lib/wrapupAttempt";
 import { useCase } from "../../context/CaseContext";
-import type { ClinicalNote, NoteDraft } from "../../types";
+import type { ClinicalNote, NoteDraft, UserProfile } from "../../types";
 import { FeedbackReport } from "./FeedbackReport";
 
 type Candidate = {
@@ -25,10 +26,12 @@ type Candidate = {
 export function WrapUpModule({
   editors,
   userNotes,
+  user,
   embedded = false,
 }: {
   editors: NoteDraft[];
   userNotes: ClinicalNote[];
+  user: UserProfile;
   /** When docked in the floating panel, hide the module's own title row. */
   embedded?: boolean;
 }) {
@@ -86,13 +89,28 @@ export function WrapUpModule({
       )}
 
       {attempt ? (
-        <FeedbackReport
-          result={scoreNote(attempt.text, rubric)}
-          rubric={rubric}
-          text={attempt.text}
-          scoredAt={attempt.at}
-          onReset={() => setStoredAttempt("")}
-        />
+        isOverreach(user.grade, rubric.task.minGrade) ? (
+          <div className="wrapup-overreach">
+            <div className="wrapup-overreach-score">
+              -1000 / {scoreNote(attempt.text, rubric).possible}
+            </div>
+            <h2>Acting above your competence</h2>
+            <p>
+              You signed a {rubric.task.label} as {gradeLabel(user.grade)} — this case
+              expects {gradeLabel(rubric.task.minGrade)}. Escalate to your senior;
+              do not improvise senior reviews.
+            </p>
+            <button onClick={() => setStoredAttempt("")}>Try another note</button>
+          </div>
+        ) : (
+          <FeedbackReport
+            result={scoreNote(attempt.text, rubric)}
+            rubric={rubric}
+            text={attempt.text}
+            scoredAt={attempt.at}
+            onReset={() => setStoredAttempt("")}
+          />
+        )
       ) : candidates.length === 0 ? (
         <div className="wrapup-empty">
           Nothing to score yet. Write your {rubric.noteType.toLowerCase()} in the

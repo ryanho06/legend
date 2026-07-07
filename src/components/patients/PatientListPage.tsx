@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ClipboardList, FolderOpen, Search } from "lucide-react";
 import { caseRegistry, listSpecialties } from "../../data/patients";
+import { gradeLabel, gradeRank } from "../../lib/grades";
 
 /**
  * Full-screen Patient Lists activity (the Epic patient-list view, sim-sized):
@@ -18,7 +19,10 @@ export function PatientListPage({
 }) {
   const specialties = listSpecialties();
   const [selected, setSelected] = useState(specialties[0] ?? "");
-  const rows = caseRegistry.filter((c) => c.specialty === selected);
+  const rows = caseRegistry
+    .filter((c) => c.specialty === selected)
+    .slice()
+    .sort((a, b) => gradeRank(a.rubric.task.minGrade) - gradeRank(b.rubric.task.minGrade));
 
   return (
     <div className="patient-list-page">
@@ -69,7 +73,7 @@ export function PatientListPage({
             <col style={{ width: 110 }} />
             <col style={{ width: 80 }} />
             <col />
-            <col style={{ width: 270 }} />
+            <col style={{ width: 300 }} />
           </colgroup>
           <thead>
             <tr>
@@ -78,7 +82,7 @@ export function PatientListPage({
               <th>MRN</th>
               <th>Sex / Age</th>
               <th>Handoff — Summary</th>
-              <th>Service</th>
+              <th>Hierarchy</th>
             </tr>
           </thead>
           <tbody>
@@ -98,7 +102,13 @@ export function PatientListPage({
                   {c.patient.sex}, {c.patient.age}
                 </td>
                 <td className="patient-list-handoff">{c.handoff}</td>
-                <td>{c.patient.specialty}</td>
+                <td className="patient-list-hierarchy">
+                  <span className={`task-badge task-${c.rubric.task.code}`}>
+                    {c.rubric.task.code.toUpperCase()}
+                  </span>
+                  <span className="task-label">{c.rubric.task.label}</span>
+                  <span className="task-grade">{gradeLabel(c.rubric.task.minGrade)}</span>
+                </td>
               </tr>
             ))}
           </tbody>

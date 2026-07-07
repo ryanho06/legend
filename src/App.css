@@ -3135,3 +3135,56 @@ button {
   background: transparent;
   padding: 8px;
 }
+
+.patient-list-hierarchy {
+  white-space: nowrap;
+}
+
+.patient-list-hierarchy .task-badge {
+  display: inline-block;
+  padding: 0 5px;
+  margin-right: 6px;
+  border-radius: 2px;
+  font-weight: bold;
+  font-size: 10px;
+  background: #dce8f5;
+  border: 1px solid #9db4c8;
+}
+
+.patient-list-hierarchy .task-badge.task-ptwr,
+.patient-list-hierarchy .task-badge.task-ed {
+  background: #f5dede;
+  border-color: #c89d9d;
+}
+
+.patient-list-hierarchy .task-label {
+  margin-right: 6px;
+}
+
+.patient-list-hierarchy .task-grade {
+  color: #5a6b7a;
+  font-size: 11px;
+}
+
+.wrapup-overreach {
+  margin: 18px auto;
+  max-width: 460px;
+  border: 2px solid #b03030;
+  background: #fdf1f1;
+  padding: 18px;
+  text-align: center;
+}
+
+.wrapup-overreach-score {
+  font-size: 28px;
+  font-weight: bold;
+  color: #b03030;
+}
+
+.wrapup-overreach h2 {
+  margin: 8px 0 6px;
+}
+
+.wrapup-overreach p {
+  margin: 0 0 12px;
+}

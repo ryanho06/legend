@@ -370,6 +370,7 @@ export function PatientWorkspace({
         onClose={() => onPatch({ wrapupOpen: false })}
         editors={editors}
         userNotes={userNotes}
+        user={user}
       />
     </>
   );

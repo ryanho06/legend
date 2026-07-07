@@ -1,6 +1,6 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Activity, X } from "lucide-react";
-import type { ClinicalNote, NoteDraft } from "../../types";
+import type { ClinicalNote, NoteDraft, UserProfile } from "../../types";
 import { WrapUpModule } from "./WrapUpModule";
 
 const MIN_W = 320;
@@ -25,12 +25,14 @@ export function WrapUpDock({
   onClose,
   editors,
   userNotes,
+  user,
 }: {
   open: boolean;
   onToggle: () => void;
   onClose: () => void;
   editors: NoteDraft[];
   userNotes: ClinicalNote[];
+  user: UserProfile;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -87,7 +89,7 @@ export function WrapUpDock({
             </button>
           </div>
           <div className="wrapup-dock-body">
-            <WrapUpModule editors={editors} userNotes={userNotes} embedded />
+            <WrapUpModule editors={editors} userNotes={userNotes} user={user} embedded />
           </div>
         </div>
       )}
