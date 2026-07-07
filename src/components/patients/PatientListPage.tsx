@@ -21,7 +21,6 @@ export function PatientListPage({
   const [selected, setSelected] = useState(specialties[0] ?? "");
   const rows = caseRegistry
     .filter((c) => c.specialty === selected)
-    .slice()
     .sort((a, b) => gradeRank(a.rubric.task.minGrade) - gradeRank(b.rubric.task.minGrade));
 
   return (
@@ -73,7 +72,7 @@ export function PatientListPage({
             <col style={{ width: 110 }} />
             <col style={{ width: 80 }} />
             <col />
-            <col style={{ width: 300 }} />
+            <col style={{ width: 320 }} />
           </colgroup>
           <thead>
             <tr>
@@ -106,7 +105,7 @@ export function PatientListPage({
                   <span className={`task-badge task-${c.rubric.task.code}`}>
                     {c.rubric.task.code.toUpperCase()}
                   </span>
-                  <span className="task-label">{c.rubric.task.label}</span>
+                  {/*<span className="task-label">{c.rubric.task.label}</span>*/}
                   <span className="task-grade">{gradeLabel(c.rubric.task.minGrade)}</span>
                 </td>
               </tr>
