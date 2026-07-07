@@ -48,7 +48,7 @@ export const SMART_PHRASES: SmartPhrase[] = [
     description: "History & physical shell with demographics filled in",
     build: (patient, admissionDate) =>
       [
-        heading("ADMISSION H&amp;P"),
+        heading(escapeHtml("ADMISSION H&P")),
         line(
           `Admission Date: ${escapeHtml(admissionDate)} - PCP: ${escapeHtml(
             careTeamName(patient.primaryCare),
