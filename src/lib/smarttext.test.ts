@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { matchPhrases, plainTextToEditorHtml, SMART_PHRASES } from "./smarttext";
-import type { CasePatient } from "../types";
+import type { BloodRow, CaseBundle, CasePatient, CaseRubric, CaseSummary, VitalsPoint } from "../types";
 
 const patient: CasePatient = {
   surname: "Bennett",
@@ -42,6 +42,51 @@ function wildcardCount(html: string): number {
   return (html.match(/st-wildcard/g) ?? []).length;
 }
 
+const vitals: VitalsPoint = { t: "07/07 06:00", sys: 128, dia: 76, hr: 91, resp: 18, spo2: 95, tempC: 37.8 };
+
+const bloods: BloodRow[] = [
+  { test: "WBC", value: "14.2", range: "4.0-11.0", flag: "H" },
+  { test: "Na", value: "138", range: "133-146", flag: "" },
+];
+
+const rubric: CaseRubric = {
+  caseId: "test001",
+  noteType: "Progress Notes",
+  task: { code: "ward", label: "WARD ROUND REVIEW", minGrade: "fy" },
+  items: [],
+  wordBand: { target: 200, max: 400 },
+  sections: [],
+  modelNote: "",
+};
+
+const summary: CaseSummary = {
+  workingDiagnosis: "test",
+  vitalsTrend: [
+    { ...vitals, t: "06/07 06:00", hr: 80 },
+    vitals, // last point is what PROGRESS must use
+  ],
+  activeProblems: [],
+  ipMeds: [],
+  weights: [],
+  firstWeight: { when: "01/07", value: "70" },
+  microbiology: [],
+  linesDrains: [],
+  diseaseReports: [],
+};
+
+const bundle: CaseBundle = {
+  id: "test001",
+  specialty: "General Medicine",
+  handoff: "",
+  patient,
+  documents: [],
+  notes: [],
+  encounters: [],
+  rubric,
+  summary,
+  bloods,
+};
+
 describe("matchPhrases", () => {
   test("matches ids case-insensitively", () => {
     expect(matchPhrases("hp").map((p) => p.id)).toContain("HP");
@@ -69,7 +114,7 @@ describe("matchPhrases", () => {
 
 describe("HP template", () => {
   const hp = SMART_PHRASES.find((p) => p.id === "HP")!;
-  const html = hp.build(patient, "01/07/2026");
+  const html = hp.build(bundle, "01/07/2026");
 
   test("autofills the demographics stem", () => {
     expect(html).toContain("Bennett, Sandra is a 57yr old female with ");
@@ -112,18 +157,50 @@ describe("HP template", () => {
 
 describe("PROGRESS template", () => {
   const progress = SMART_PHRASES.find((p) => p.id === "PROGRESS")!;
-  const html = progress.build(patient, "01/07/2026");
+  const html = progress.build(bundle, "01/07/2026");
 
-  test("has the SOAP skeleton with 4 wildcards", () => {
-    expect(wildcardCount(html)).toBe(4);
-    for (const header of ["Subjective:", "Objective:", "Assessment:", "Plan:"]) {
+  test("header autofills name, room, specialty; hospital day is a wildcard", () => {
+    expect(html).toContain("Bennett, Sandra | RM AMU Bay 7 | GENERAL MEDICINE PROGRESS NOTE - HOSPITAL DAY: ");
+  });
+
+  test("vitals line uses the LAST trend point", () => {
+    expect(html).toContain("T 37.8 · HR 91 · BP 128/76 · RR 18 · SpO2 95%");
+    expect(html).not.toContain("HR 80");
+  });
+
+  test("labs render every blood row with value, range and flag", () => {
+    expect(html).toContain("WBC 14.2 (4.0-11.0) H");
+    expect(html).toContain("Na 138 (133-146)");
+  });
+
+  test("exam bullets and closing fields are wildcards; 15 chips total", () => {
+    for (const stub of ["Gen - ", "CV - ", "Lungs - ", "Abd - ", "Extremities - ", "Neuro - ", "IVF: ", "Diet: ", "DVT prophylaxis: "]) {
+      expect(html).toContain(stub);
+    }
+    expect((html.match(/st-wildcard/g) ?? []).length).toBe(15);
+  });
+
+  test("has the section headers", () => {
+    for (const header of ["INTERVAL HISTORY:", "SUBJECTIVE:", "OBJECTIVE:", "LABS:", "IMAGING:", "MICRO:", "ASSESSMENT & PLAN:"]) {
       expect(html).toContain(header);
     }
   });
+});
 
-  test("stems with the patient name and admission date", () => {
-    expect(html).toContain("Bennett, Sandra");
-    expect(html).toContain("01/07/2026");
+describe("PTWR template", () => {
+  const ptwr = SMART_PHRASES.find((p) => p.id === "PTWR")!;
+  const html = ptwr.build(bundle, "01/07/2026");
+
+  test("stems with demographics and admission date", () => {
+    expect(html).toContain("POST-TAKE WARD ROUND — General Medicine");
+    expect(html).toContain("Bennett, Sandra is a 57yr old female admitted 01/07/2026 with ");
+  });
+
+  test("7 chips: seen-with, stem, exam, impression, three plan items", () => {
+    expect((html.match(/st-wildcard/g) ?? []).length).toBe(7);
+    for (const header of ["Seen with: ", "EXAMINATION:", "IMPRESSION:", "PLAN:"]) {
+      expect(html).toContain(header);
+    }
   });
 });
 

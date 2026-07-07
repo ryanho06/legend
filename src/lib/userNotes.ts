@@ -5,6 +5,7 @@ import { gradeAuthorRole, gradeCredential } from "./grades";
 
 const CATEGORY_BY_TYPE: Record<string, NoteCategory> = {
   "Progress Note": "Progress",
+  "Post-Take Ward Round": "Progress",
   "H&P": "H&P",
   "Consult Note": "Consults",
   "Procedure Note": "Procedures",

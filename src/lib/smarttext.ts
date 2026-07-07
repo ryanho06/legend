@@ -1,17 +1,18 @@
-import type { CasePatient } from "../types";
+import type { CaseBundle, CasePatient } from "../types";
 
 /**
  * SmartText phrases: Epic-style note templates inserted from the editor's
  * "Insert SmartText" field. `build` returns editor-ready HTML (one <div> per
- * line) with demographics autofilled from the case and `***` wildcard chips
- * for everything the trainee must complete from chart review.
+ * line) with demographics (and, for data-rich templates, vitals/labs) autofilled
+ * from the case bundle and `***` wildcard chips for everything the trainee must
+ * complete from chart review.
  */
 export type SmartPhrase = {
   /** SmartText name shown bold in the picker, e.g. "HP". */
   id: string;
   label: string;
   description: string;
-  build: (patient: CasePatient, admissionDate: string) => string;
+  build: (bundle: CaseBundle, admissionDate: string) => string;
 };
 
 /** Inline chip for an unfilled field; NoteEditor Tab-cycles and replaces these. */
@@ -46,7 +47,7 @@ export const SMART_PHRASES: SmartPhrase[] = [
     id: "HP",
     label: "Admission H&P",
     description: "History & physical shell with demographics filled in",
-    build: (patient, admissionDate) =>
+    build: ({ patient }, admissionDate) =>
       [
         heading(escapeHtml("ADMISSION H&P")),
         line(
@@ -83,22 +84,77 @@ export const SMART_PHRASES: SmartPhrase[] = [
   },
   {
     id: "PROGRESS",
-    label: "Progress Note (SOAP)",
-    description: "Ward-round SOAP skeleton",
-    build: (patient, admissionDate) =>
-      [
-        heading("PROGRESS NOTE"),
+    label: "Progress Note",
+    description: "Daily progress note with vitals and labs pulled from the chart",
+    build: (bundle) => {
+      const { patient, summary, bloods } = bundle;
+      const latest = summary.vitalsTrend.at(-1);
+      const vitalsLine = latest
+        ? line(
+            escapeHtml(
+              `T ${latest.tempC} · HR ${latest.hr} · BP ${latest.sys}/${latest.dia} · RR ${latest.resp} · SpO2 ${latest.spo2}%`,
+            ),
+          )
+        : line(WILDCARD);
+      const labLines = bloods.map((row) =>
         line(
-          `${escapeHtml(patient.displayName)} - admitted ${escapeHtml(admissionDate)}`,
+          escapeHtml(
+            `${row.test} ${row.value} (${row.range})${row.flag ? ` ${row.flag}` : ""}`,
+          ),
+        ),
+      );
+      const exam = ["Gen", "CV", "Lungs", "Abd", "Extremities", "Neuro"].map(
+        (system) => line(`${system} - ${WILDCARD}`),
+      );
+      return [
+        line(
+          `<b>${escapeHtml(patient.displayName)} | RM ${escapeHtml(patient.location)} | ${escapeHtml(patient.specialty.toUpperCase())} PROGRESS NOTE - HOSPITAL DAY: </b>${WILDCARD}`,
         ),
         BLANK,
-        section("Subjective:"),
+        section("INTERVAL HISTORY:"),
         BLANK,
-        section("Objective:"),
+        section("SUBJECTIVE:"),
         BLANK,
-        section("Assessment:"),
+        heading("OBJECTIVE:"),
+        vitalsLine,
+        ...exam,
+        heading("LABS:"),
+        ...labLines,
+        heading("IMAGING:"),
+        line(WILDCARD),
+        heading("MICRO:"),
+        line(WILDCARD),
         BLANK,
-        section("Plan:"),
+        section("ASSESSMENT & PLAN:"),
+        BLANK,
+        line(`IVF: ${WILDCARD}`),
+        line(`Diet: ${WILDCARD}`),
+        line(`DVT prophylaxis: ${WILDCARD}`),
+      ].join("");
+    },
+  },
+  {
+    id: "PTWR",
+    label: "Post-Take Ward Round",
+    description: "Senior post-take review shell",
+    build: ({ patient, specialty }, admissionDate) =>
+      [
+        heading(`POST-TAKE WARD ROUND — ${escapeHtml(specialty)}`),
+        line(`Seen with: ${WILDCARD}`),
+        BLANK,
+        line(
+          `${escapeHtml(patient.displayName)} is a ${patient.age}yr old ` +
+            `${escapeHtml(patient.sex.toLowerCase())} admitted ${escapeHtml(admissionDate)} with ${WILDCARD}`,
+        ),
+        BLANK,
+        section("EXAMINATION:"),
+        BLANK,
+        section("IMPRESSION:"),
+        BLANK,
+        heading("PLAN:"),
+        line(`1. ${WILDCARD}`),
+        line(`2. ${WILDCARD}`),
+        line(`3. ${WILDCARD}`),
       ].join(""),
   },
 ];

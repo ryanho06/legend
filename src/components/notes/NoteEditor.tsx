@@ -5,6 +5,7 @@ import { matchPhrases, type SmartPhrase } from "../../lib/smarttext";
 
 const NOTE_TYPES = [
   "Progress Note",
+  "Post-Take Ward Round",
   "H&P",
   "Consult Note",
   "Procedure Note",
@@ -79,7 +80,8 @@ export function NoteEditor({
   });
   const [fontSize, setFontSize] = useState(11);
   const [words, setWords] = useState(0);
-  const { patient, encounters } = useCase();
+  const activeCase = useCase();
+  const { encounters } = activeCase;
   const [stQuery, setStQuery] = useState("");
   const [stIndex, setStIndex] = useState(0);
   const [wildcards, setWildcards] = useState(0);
@@ -225,7 +227,7 @@ export function NoteEditor({
     const el = editorRef.current;
     if (!el) return;
     const admissionDate = encounters.find((e) => e.admission)?.date ?? "";
-    const html = phrase.build(patient, admissionDate);
+    const html = phrase.build(activeCase, admissionDate);
     let range = savedRange.current;
     if (!range || !el.contains(range.commonAncestorContainer)) {
       range = document.createRange();
