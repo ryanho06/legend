@@ -77,7 +77,9 @@ export function NotePreview({
             title={
               onAddendum
                 ? "Append an addendum to this note"
-                : "Only your own notes can be addended"
+                : note.status === "incomplete"
+                  ? "Incomplete notes cannot be addended"
+                  : "Only your own notes can be addended"
             }
             onClick={onAddendum}
           >
