@@ -63,6 +63,14 @@ is a `CaseBundle`; read that type first. Key fields with non-obvious rules:
   - The admission bloods receipt must be **generated from `bloods.ts`**, not
     retyped (see how cholangitis001 `documents.ts` maps `bloods` into
     `LabRow[]`). One source, no drift.
+- **Doctor IDs and the player persona**:
+  - Staff can carry a synthetic doctor ID (`d` + 6 digits, ranges d0-d8; d9 is
+    reserved for runtime-generated logins). Give a note an `authorId` to make it
+    attributable to a person. To let the trainee play a specific clinician in a
+    case (their notes become addendable as "yours"), set that clinician's ID as
+    `playerHcpId` on the case's registry entry in `src/data/patients/index.ts`.
+    Notes without an `authorId` are ownable by nobody. Example: cholangitis001
+    sets `playerHcpId: "d284617"` (Mensah, Daniel) and stamps his four notes.
 - **Encounters** (`Encounter[]`):
   - Array order IS the timeline display order, newest first. The recency
     `group` headers ("2 Weeks Ago") are hand-tuned per row, not computed.
