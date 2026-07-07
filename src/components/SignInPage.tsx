@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LogIn } from "lucide-react";
+import { generateHcpId } from "../lib/userNotes";
 import type { UserProfile } from "../types";
 
 /**
@@ -15,7 +16,11 @@ export function SignInPage({ onComplete }: { onComplete: (user: UserProfile) => 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!ready) return;
-    onComplete({ forename: forename.trim(), surname: surname.trim() });
+    onComplete({
+      forename: forename.trim(),
+      surname: surname.trim(),
+      hcpId: generateHcpId(),
+    });
   }
 
   return (

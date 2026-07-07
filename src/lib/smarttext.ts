@@ -116,3 +116,18 @@ export function matchPhrases(query: string): SmartPhrase[] {
       phrase.id.toLowerCase().includes(q) || phrase.label.toLowerCase().includes(q),
   );
 }
+
+/**
+ * Editor HTML from stored plain text: escaped lines in <div>s, blank lines as
+ * <div><br></div>, and literal *** reconstituted into wildcard chips so the
+ * Sign gate survives a pend -> edit round trip.
+ */
+export function plainTextToEditorHtml(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      if (!line.trim()) return BLANK;
+      return `<div>${escapeHtml(line).replace(/\*\*\*/g, WILDCARD)}</div>`;
+    })
+    .join("");
+}

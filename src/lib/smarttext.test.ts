@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { matchPhrases, SMART_PHRASES } from "./smarttext";
+import { matchPhrases, plainTextToEditorHtml, SMART_PHRASES } from "./smarttext";
 import type { CasePatient } from "../types";
 
 const patient: CasePatient = {
@@ -124,5 +124,30 @@ describe("PROGRESS template", () => {
   test("stems with the patient name and admission date", () => {
     expect(html).toContain("Bennett, Sandra");
     expect(html).toContain("01/07/2026");
+  });
+});
+
+describe("plainTextToEditorHtml", () => {
+  test("wraps lines in divs and blank lines as <div><br></div>", () => {
+    expect(plainTextToEditorHtml("One\n\nTwo")).toBe(
+      "<div>One</div><div><br></div><div>Two</div>",
+    );
+  });
+
+  test("escapes HTML in the stored text", () => {
+    expect(plainTextToEditorHtml("a <b> & c")).toBe("<div>a &lt;b&gt; &amp; c</div>");
+  });
+
+  test("reconstitutes *** into wildcard chips so the Sign gate survives", () => {
+    const html = plainTextToEditorHtml("CC: ***");
+    expect(html).toBe(
+      '<div>CC: <span class="st-wildcard" contenteditable="false">***</span></div>',
+    );
+  });
+
+  test("multiple wildcards on one line each become chips", () => {
+    expect(
+      (plainTextToEditorHtml("*** and ***").match(/st-wildcard/g) ?? []).length,
+    ).toBe(2);
   });
 });

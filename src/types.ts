@@ -94,6 +94,8 @@ export type ClinicalNote = {
   /** Unix epoch seconds; sort key for the list (display uses dateOfService). */
   timestamp: number;
   status: NoteStatus;
+  /** Doctor ID of the author; ownership compares this to the login/persona. */
+  authorId?: string;
   /** True for notes that belong to the admission episode (cross-cuts category). */
   admission?: boolean;
   /** Time-critical content (e.g. ED triage); shown with a red marker in lists. */
@@ -201,6 +203,9 @@ export type Report = ClinicalReport;
 export type UserProfile = {
   forename: string;
   surname: string;
+  /** Synthetic doctor ID, e.g. "d912345". d9##### = runtime-generated logins;
+   * authored case staff use d0#####-d8##### so they can never collide. */
+  hcpId: string;
 };
 
 /** An open note in the right-rail NoteWriter; multiple can be edited at once. */
@@ -209,6 +214,10 @@ export type NoteDraft = {
   noteType: string;
   service: string;
   body: string;
+  /** "edit" reopens an incomplete user note; "addendum" appends to a signed one. */
+  mode?: "edit" | "addendum";
+  /** The stored note an edit/addendum draft targets. */
+  targetNoteId?: string;
 };
 
 /**
@@ -376,6 +385,8 @@ export type CaseBundle = {
   specialty: string;
   /** One-line handoff summary shown in the patient list row. */
   handoff: string;
+  /** Doctor ID of the simulated persona the trainee plays in this case, if any. */
+  playerHcpId?: string;
   patient: CasePatient;
   documents: ClinicalDocument[];
   /** kind:"note" subset of documents (static pre-authored notes). */

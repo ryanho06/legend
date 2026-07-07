@@ -4,6 +4,8 @@ export const USER_KEY = "legend-user";
 
 export const userNotesKey = (caseId: string) => `legend-user-notes-${caseId}`;
 
+export const addendaKey = (caseId: string) => `legend-addenda-${caseId}`;
+
 /** "Always ignore this message" for the delete-note confirm. Device-level
  * preference, deliberately NOT cleared by signOut. */
 export const SKIP_DELETE_CONFIRM_KEY = "legend-skip-delete-confirm";
