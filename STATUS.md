@@ -2,11 +2,14 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-06
+Last updated: 2026-07-09
 Branch / worktree: main
-Latest session: multi-case foundation (8d694ea registry, dec89c0 patient switching,
-CASE_AUTHORING.md). Prior: Cloudflare deploy + README + mobile gate (3b04aeb..70c80ca).
-Earlier ranges: 47ee20b..54a1ea1 (tab restructure), cce42a4..dc9f29b (note feedback).
+Latest session: backend research + plan for user accounts (see "Next concrete step"
+and "Blocked / decisions needed"). Prior sessions: hierarchy system + case fleet
+(68e1f64..8574cee), multi-case foundation (8d694ea registry, dec89c0 patient
+switching, CASE_AUTHORING.md), Cloudflare deploy + README + mobile gate
+(3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note feedback
+(cce42a4..dc9f29b).
 
 ## Done
 - Restored the lost Chart Review + Results work from Claude Code file-history after
@@ -45,28 +48,74 @@ Earlier ranges: 47ee20b..54a1ea1 (tab restructure), cce42a4..dc9f29b (note feedb
   - CASE_AUTHORING.md: the Cowork-facing contract for generating new cases
     (folder layout, type rules, rubric + required rubric.test.ts, registry hookup,
     acceptance checklist).
+- Hierarchy system + editor upgrades (68e1f64..8574cee): fy/st3/consultant grades
+  at sign-in, per-case task + minGrade, -1000 overreach panel on signing above
+  grade, patient list sorted easiest-first with Hierarchy column/filter; SmartText
+  bundle-aware builds (PROGRESS embeds vitals+labs, new PTWR shell); edit/addendum
+  on owned notes; rubric trigger hygiene (PROGRESS auto-text can never score,
+  registry-wide guard test); README rewritten for judges.
+- Case fleet: 16 case folders exist (cholangitis001 reference + 15 generated).
+  Case generation is DONE for now — do not queue more from CASE_BACKLOG.md.
+- Context shift (2026-07-09): the hackathon application did NOT come through.
+  Judges no longer matter; optimize for real users and the product roadmap, not
+  a demo. Memory [[legend-hackathon-context]] updated to match.
 
 ## In flight
-- Nothing mid-change; the multi-case demo loop is ready.
+- `src/data/patients/hyponatraemia001/` is a deliberately uncommitted partial case
+  (bloods.ts + patient.json only, NOT in the registry, so the build is unaffected).
+  Ryan's call (2026-07-09): leave it on disk; CASE_BACKLOG.md now carries an
+  IN PROGRESS note telling the next case-generation run to resume it.
+- .gitignore + CLAUDE.md carry uncommitted modifications not made in this session;
+  .graphifyignore untracked. Left alone per Ryan (commit scope was CASE_BACKLOG.md
+  + session doc updates only).
 
 ## Next concrete step
-- Cowork generates additional cases against CASE_AUTHORING.md (a couple per
-  specialty). Each is a folder + registry entry; acceptance = the checklist at the
-  bottom of that doc. Then, per the roadmap (memory [[legend-roadmap]]): simulated
-  attending feedback as text — first stage needing a server-side API key; the
-  Worker deploy was chosen so an API-proxy endpoint can be added to
-  `wrangler.jsonc` + a small `main` script without replatforming.
+Pivot from content to backend: user accounts -> server persistence -> Patient
+Message + LLM attending feedback. Researched 2026-07-09 (Cloudflare-native, primary
+sources); recommended stack:
+- Worker `main` script + Hono router on the existing static-assets deploy:
+  `wrangler.jsonc` gains `"main"` + `assets.run_worker_first: ["/api/*"]`
+  (documented SPA-with-API recipe; `not_found_handling` unchanged).
+- better-auth >= 1.5 (native D1 support: `database: env.DB`, no ORM adapter) +
+  Google social login + the anonymous plugin (guest sessions keep first-use
+  friction at zero; `onLinkAccount` migrates guest work into the real account).
+  No email/password: bcrypt/argon2 unusable in workerd, PBKDF2 capped at 100k
+  iterations; delegating password proof to Google is the accepted Workers
+  pattern. Official docs cover the whole stack (better-auth installation page
+  has the Workers `nodejs_compat` flag; 1.5 blog documents the D1 binding;
+  Hono has an official "Better Auth on Cloudflare" example). Known bug: skip
+  `cookieCache` + KV secondary storage (logout bug, open as of Feb 2026).
+- D1 for everything (users, sessions, notes, attempts, messages). Durable Objects
+  only if Patient Message ever goes real-time/WebSocket.
+- Stay on the Workers FREE tier (Ryan 2026-07-09; working model first). This is
+  fine because Google-only auth means no CPU-heavy hashing, and an LLM proxy is
+  I/O-bound (awaiting Anthropic doesn't consume the 10ms CPU budget). D1 free
+  tier (500MB/db, ~5M row reads + 100k row writes per day) dwarfs the workload.
+  Revisit Paid only if email/password auth or heavy compute ever lands.
+- Patient Message scope (Ryan 2026-07-09): one chat channel per patient. All
+  HCPs involved in that patient (note authors, nurse, doctors, pharmacist,
+  microbiologist) are LLM-played personas grounded in the case bundle; the
+  trainee asks quick MDT questions on the channel (e.g. "spiking 39, switch to
+  oral vanc?") and gets in-character, case-accurate replies/pushback (e.g.
+  micro: wound culture is gram-negative only, blood cultures clear — continue
+  metro + cipro IV). Async request/response, D1 rows, no real-time transport.
+- Phases: (0) persist unsigned drafts to localStorage now, ~1-2h, no accounts
+  needed; (1) Worker+Hono foundation ~0.5d; (2) better-auth accounts ~1.5-2d;
+  (3) notes/attempts persistence API + one-shot `POST /api/import` localStorage
+  migration ~1.5-2d; (4) Patient Message channel + authenticated LLM proxy
+  route. Full PLAN.md to be written per-phase.
 
 ## Ideas / later
-- Persist open (unsigned) drafts; only signed/pended notes survive reload today.
 - LLM judge layer for paraphrase-heavy rubric items (schema already judge-agnostic).
-- SmartText note-editing helper (next editor feature after the demo).
-- Second case: once one case bundles documents.ts + encounters.ts + rubric.ts, new
-  cases are data-only.
 - Epic-inspired backlog: hover previews, "new since last viewed", AI chart summary.
+- Remaining CASE_BACKLOG.md seeds (parked; resume after the backend pivot).
 
 ## Blocked / decisions needed
-- None.
+- None. All four backend-pivot decisions landed 2026-07-09: (a) Google-only +
+  guest mode confirmed; (b) Workers free tier until a working model exists;
+  (c) Patient Message = per-patient MDT chat channel with LLM HCP personas (see
+  scope above); (d) commit CASE_BACKLOG.md only, hyponatraemia001 stays on disk
+  with a resume note in the backlog.
 
 ## Notes for next session
 - Verify target: `npm test` (43 tests, 5 files), `npx tsc -b`, `npm run lint`.
