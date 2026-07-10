@@ -198,7 +198,8 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   (`npx wrangler d1 migrations apply legend-db --remote`) always gated on Ryan.
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
 - Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
-  reload or they're lost. Signed/pended user notes persist in localStorage.
+  reload or they're lost. Signed/pended user notes persist server-side in D1
+  (phase 3), keyed to the better-auth account.
 - The editor body is contentEditable HTML; scoring/reflow go through the pure libs
   (`noteText.ts`, `reflow.ts`), which use string transforms not DOMParser so node
   tests and the browser agree.
