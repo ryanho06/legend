@@ -141,57 +141,51 @@ action-keyed sim clock, and lazy catch-up on read. No cron, no Durable Object, n
 loop. The engine is a pure fold plus a reveal filter over D1, running inside the existing
 Phase 3 work router.
 
-### 5.1 Data model (two new D1 tables, migration 0004)
+### 5.1 Data model (ONE new D1 table, migration 0004) — Model B, decided 2026-07-10
 
-Clone the `user_note` discipline verbatim (opaque JSON payload, indexed `(scope,caseId)`,
-`references "user"("id") on delete cascade`) so the anon-purge cron and FK cleanup work
-for free. Highest existing migration is 0003; this is 0004.
+**Model B (server clock + client reveal), chosen over the research doc's server-side
+`case_event` log.** The worker cannot import client-side case content (the SPA/worker type
+boundary), so it cannot materialize a case's authored `events.ts` into D1. Instead the
+server stores only the **clock**; the client reveals its own authored events by that clock.
+So v1 adds ONE table, not two.
+
+Clone the `user_note` discipline (indexed, `references "user"("id") on delete cascade`) so
+the anon-purge cron and FK cleanup work for free. Highest existing migration is 0003; this
+is 0004.
 
 ```sql
-create table case_session (
-  id        text primary key,
-  scope     text    not null,          -- userId today; sessionId when multiplayer lands
-  caseId    text    not null,
-  simNow    integer not null,          -- sim-time cursor (seconds of sim-offset from anchor)
-  seed      text    not null,          -- cosmetic jitter only: hash(seed, eventId)
-  createdAt integer not null,
-  updatedAt integer not null
+create table "case_session" (
+  "scope"     text    not null,   -- userId today; sessionId when multiplayer lands (fork D)
+  "caseId"    text    not null,
+  "simNow"    integer not null,   -- sim-time cursor: seconds of sim-offset from the case anchor
+  "updatedAt" integer not null,
+  primary key ("scope", "caseId"),
+  foreign key ("scope") references "user" ("id") on delete cascade
 );
-create unique index case_session_scope_case_idx on case_session (scope, caseId);
-
-create table case_event (
-  id        text primary key,
-  scope     text    not null,
-  caseId    text    not null,
-  kind      text    not null,          -- see section 6
-  payload   text    not null,          -- opaque JSON; for a document kind the payload IS a ClinicalDocument
-  revealAt  integer not null,          -- due sim-time; materialized once revealAt <= simNow
-  dedupeKey text    not null,          -- unique(scope,caseId,dedupeKey): idempotent materialization
-  seq       integer not null,          -- authored ordering key (never derive order from display strings)
-  createdAt integer not null
-);
-create unique index case_event_dedupe_idx on case_event (scope, caseId, dedupeKey);
-create index case_event_scope_case_idx on case_event (scope, caseId);
 ```
 
 Notes:
-- `scope` column is carried now (fork D) with the value = userId in v1. Moving to shared
-  sessions later is a value change, not a migration. This is the one decision the
-  research and permissions docs flag as painful to retrofit; carrying the column
-  neutralizes it.
-- `case_session` is one row per (scope, caseId): the trainee's clock for that case.
-- `case_event` is the append-only log. Authored dynamics are inserted as rows with a
-  future `revealAt`; they become visible only when `simNow` reaches them.
-- `dedupeKey` makes materialization idempotent so concurrent reads cannot double-insert.
+- The `scope` column is carried now (fork D) with value = userId in v1. Moving to shared
+  sessions later is a value change, not a migration: the one retrofit the research and
+  permissions docs flag as painful, neutralized. (In v1 `scope` holds the better-auth user
+  id, so the FK to `user(id)` holds and the anon-purge cron cleans clocks for free; when
+  `scope` becomes a sessionId, drop the FK and let a session table own cascade.)
+- One row per (scope, caseId): the trainee's clock for that case. Lazily created at
+  `simNow = 0` on first read.
+- **No `case_event` table in v1.** Authored, deterministic sim-events live in each case's
+  client `events.ts` and are revealed by the client filtering on `revealAt <= simNow`
+  (section 5.4). A server-side `case_event` log is deferred to when content is genuinely
+  NOT client-authored: LLM-generated persona output and multiplayer-shared runtime events
+  (section 13). When it lands it clones this same discipline and reuses the `scope` column.
 
 ### 5.2 rekey on Google-link (do not forget)
 
 `rekey.ts` hand-moves each work table off the guest id inside `onLinkAccount`, before the
-anonymous user is cascade-deleted. The new tables MUST be added to that `db.batch`:
-`update case_session set scope = ?2 where scope = ?1` and the same for `case_event`
-(use `update or replace` for `case_session` because `(scope,caseId)` is unique and could
-collide on the target account, mirroring the `wrapup_attempt` precedent). Omitting this
-silently loses a linking guest's evolved case. This is the single easy-to-miss seam.
+anonymous user is cascade-deleted. The new `case_session` table MUST be added to that
+`db.batch`: `update or replace case_session set scope = ?2 where scope = ?1` (OR REPLACE
+because `(scope, caseId)` is the primary key and could collide if the target account
+already has a clock for the same case, mirroring the `wrapup_attempt` precedent). Omitting
+this silently resets a linking guest's clock. This is the single easy-to-miss seam.
 
 ### 5.3 The fold: applyEvents
 
@@ -210,15 +204,14 @@ A pure, React-free `applyEvents(bundle: CaseBundle, events: CaseEvent[]): CaseBu
   `ClinicalNote.timestamp` is an epoch; encounters, labs, micro, vitals are display
   strings or labels).
 
-Event source composition (important): trainee work is NOT duplicated into `case_event`.
-The trainee's signed/pended notes and addenda stay in the Phase 3 `user_note` /
-`note_addendum` tables, fetched by `useCaseWork` exactly as today. `case_event` holds
-only sim-authored reveals and clock bookkeeping. The event list handed to `applyEvents`
-is built CLIENT-SIDE by merging two sources: (a) the trainee's `useCaseWork` result
-adapted into `note.create` / `note.addendum` event records, and (b) the revealed
-`case_event` rows from the `/work` read. This keeps Phase 3 storage intact, avoids
-double-writing, and means `applyEvents` sees one uniform event stream regardless of
-origin.
+Event source composition (important): the event list handed to `applyEvents` is built
+CLIENT-SIDE by merging two sources: (a) the trainee's `useCaseWork` result (their
+`user_note` / `note_addendum` rows, fetched exactly as today) adapted into `note.create` /
+`note.addendum` records, and (b) the case's authored `events.ts` entries whose
+`revealAt <= simNow` (the server clock from the `/session` read). Nothing is duplicated
+into a server event table; `applyEvents` sees one uniform stream regardless of origin.
+(When LLM/multiplayer events arrive, a `case_event` read becomes a third source merged the
+same way.)
 
 Seam correction versus the research doc: the fold does NOT go at `App.tsx:128`. There,
 `CaseContext.Provider value={activeCase}` is built from the raw registry singleton, and
@@ -228,7 +221,7 @@ the server work (`useCaseWork`) is only reachable one level down inside the keye
 ```tsx
 // PatientWorkspace.tsx, replacing the ad-hoc allDocuments/allNotes/withAddenda merge (L73-84)
 const liveCase = useMemo(
-  () => applyEvents(activeCase, events),   // events = trainee work + revealed case_events, as event records
+  () => applyEvents(activeCase, events),   // events = trainee work + authored events.ts revealed by simNow
   [activeCase, events],
 );
 return (
@@ -242,30 +235,34 @@ This routes every `useCase()` consumer (sidebar, banners, summary, encounters, n
 wrap-up) through one choke point and collapses the three coupled merge expressions that
 exist today (`allDocuments`, `allNotes`, per-id `withAddenda`).
 
-### 5.4 The engine: lazy catch-up on read
+### 5.4 The engine: server clock + client reveal (Model B)
 
-- Delivery rail: extend `GET /api/cases/:caseId/work` (the Phase 3 route). On each read
-  it (a) loads or lazily creates the `case_session`, (b) materializes every authored
-  event with `revealAt <= simNow` into `case_event` (idempotent via `dedupeKey`),
-  (c) returns the revealed events alongside the existing `{notes, addenda, attempt}`.
-- Advance rail: the shipped `POST /api/cases/:caseId/notes` handler already returns the
-  bare created note (201). Keep that return shape. After inserting the note, the handler
-  advances `simNow` by the authored delta for that round and appends the note's own
-  event; the client's next `/work` read picks up any newly-revealed events. Do NOT widen
-  the `POST /notes` response; surface reveals only on the `/work` read path (simpler, one
-  reveal filter, no change to `api.ts`/`useCaseWork` note-create typing).
+- Clock rail (server): a small session router (clone the `work.ts` session middleware).
+  `GET /api/cases/:caseId/session` lazily creates the row and returns `{ simNow }`.
+  `PUT /api/cases/:caseId/session` sets `simNow` (idempotent, last-write-wins). The server
+  does NOT know the case's authored schedule; it only persists the cursor, so the clock
+  survives reloads and is the authority for rubric-fairness (score against
+  `revealAt <= simNow`-at-sign-time).
+- Reveal rail (client): the client reads `simNow`, filters the case's authored `events.ts`
+  to `revealAt <= simNow`, and folds them (plus adapted trainee work) via `applyEvents`.
+  This is a pure client computation over static case data plus one integer from the server.
+- Advance (client-driven in v1): signing a round's note, or a chronos skip, computes the
+  new `simNow` (the next round, or the reveal's `revealAt`, both known from `events.ts`)
+  and PUTs it. Client-driven advance is fine for single-player; multiplayer moves the
+  advance authority server-side (with the deferred `case_event` log) so two clients cannot
+  diverge. Keep the reveal filter and advance-delta as pure `src/lib` functions so that
+  lift is free.
+- Do NOT widen the `POST /notes` response. Note creation stays exactly as Phase 3; the
+  clock is a separate `/session` PUT the client issues alongside signing a round note.
 - Poll on focus and on action, never on an interval (an interval would burn the shared
-  100k/day Workers budget).
-- No scheduler, cron, or Durable Object in v1. When multiplayer lands, the same pure
-  engine moves unchanged into a SQLite-backed Durable Object per case-session; keeping
-  `applyEvents` and the reveal filter pure in `src/lib` is what makes that lift free.
+  100k/day Workers budget). No scheduler, cron, or Durable Object in v1.
 
 ---
 
 ## 6. Event kinds (v1)
 
-The log is one stream for all overlay sources (trainee work, sim reveals, later Patient
-Message). v1 uses:
+`CaseEvent` (the `applyEvents` input, section 5.3) is one uniform stream for all overlay
+sources (trainee work, authored sim reveals, later LLM/Patient-Message events). v1 uses:
 
 - `note.create` / `note.refile` / `note.delete` / `note.addendum`: subsume the current
   runtime note merge. The trainee's own notes and addenda become events folded by
@@ -429,9 +426,9 @@ safe to scale to the fleet.
   passthrough.
 - Chronos matcher unit tests: intent phrases match/don't-match; skip advances `simNow`
   and reveals the right events.
-- Worker tests (`vitest-pool-workers`, real D1): `case_session` create/advance,
-  `case_event` idempotent materialization under repeated `/work` reads, rekey moves the
-  new tables, FK cascade purge removes them.
+- Worker tests (`vitest-pool-workers`, real D1): `GET /session` lazily creates the row and
+  returns `simNow`; `PUT /session` sets it (last-write-wins); rekey moves `case_session` to
+  the linked account; FK cascade purge removes it with the anon user.
 - The extended leak-guard test (section 10) and the CI timeline walker (section 11).
 - End-to-end manual: sign a day-1 PTWR on cholangitis001, verify score against the day-1
   chart; use chronos to pull sensitivities, verify the result lands stamped at its true
@@ -443,7 +440,10 @@ safe to scale to the fleet.
 
 - Triggered deterioration and hazard windows (engine supports them; no v1 content).
 - LLM-generated content of any kind (notes, silhouettes, rubrics, chronos prose).
-- Patient Message transport (same `case_event` stream later, `kind: 'message'`).
+- Server-side `case_event` log (Model B defers it: v1's authored events are client-revealed
+  from `events.ts`; the log arrives only when content is not client-authored, i.e. with LLM
+  personas and multiplayer, and it clones the `case_session` discipline + `scope` column).
+- Patient Message transport (rides that future `case_event` log, `kind: 'message'`).
 - The `results.ts` per-case refactor: it is hardcoded cholangitis-only, `ResultsModule`
   imports the singletons directly and never calls `useCase()`, and there is no
   `CaseBundle.results` field. It is also a third, unreconciled dataset (values diverge
@@ -477,9 +477,9 @@ safe to scale to the fleet.
 - The same culture is modeled twice (structured `ClinicalMicro` in the chart vs flat
   `NarrativeResult` in `results.ts`); v1 authors the structured shape and leaves Results
   static; unify when Results is refactored.
-- The `scope` column on the two new tables is the one migration painful to retrofit;
-  carrying it now (value = userId) is the mitigation (section 5.1, fork D).
-- `rekey.ts` must gain the two new UPDATE lines or linking guests lose their case
+- The `scope` column on `case_session` is the one migration painful to retrofit; carrying
+  it now (value = userId) is the mitigation (section 5.1, fork D).
+- `rekey.ts` must gain the `case_session` UPDATE line or a linking guest loses their clock
   (section 5.2).
 
 ---
@@ -496,6 +496,12 @@ safe to scale to the fleet.
 - Task keep-alive: NPC team covers uncovered rounds; voluntary; private neutral tracker;
   no forfeiture. Confirmed.
 - Lifecycle + pearls: deferred. Confirmed.
+- Engine model: Model B (server stores only `case_session.simNow`; client reveals its own
+  authored `events.ts` by that clock). Chosen over the research doc's server-materialized
+  `case_event` log because the worker cannot import client case content across the
+  SPA/worker type boundary. `case_event` deferred to LLM/multiplayer. Confirmed 2026-07-10.
+- Clock advance: client-driven in v1 (client PUTs the new `simNow` on sign / chronos);
+  multiplayer moves advance authority server-side later. Confirmed 2026-07-10.
 - Time refactor scope: pilot-first (infra + formatter + migrate cholangitis001 only);
   fleet migration deferred/lazy. Confirmed 2026-07-10.
 - Sequencing: time-infra+pilot -> engine -> hospital shell (own spec, parallel); fleet
