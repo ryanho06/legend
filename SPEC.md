@@ -1,121 +1,119 @@
-# SPEC: Phase 2 — Real user accounts (better-auth + Google + anonymous guests)
+# SPEC: Phase 3 — Server-side notes, addenda, and attempts (D1 persistence)
 
 > Durable design contract. Survives `/clear` and compaction. Edit this, not your memory.
-> Previous spec (multi-case foundation): DONE 2026-07-06, lives in git history (SPEC.md @ 0d48f4e).
+> Previous spec (phase 2, real accounts): SHIPPED 2026-07-10, lives in git history.
 
-Status: SHIPPED 2026-07-10 (all tasks incl. the gated T8: secrets in prod, remote
-migrations, deploy 86c78d99, live-verified incl. Ryan's Google click-through and
-avatar). Execution record: PLAN.md @ this commit + .superpowers/sdd/progress.md.
-Depends on: Phase 1 (Hono /api worker + D1 legend-db + Cloudflare vite plugin), SHIPPED 2026-07-10.
+Status: DESIGN APPROVED 2026-07-10 (Ryan approved both design sections). Plan: PLAN.md.
+Depends on: Phase 2 (better-auth accounts, everyone is a server-side user), SHIPPED 2026-07-10.
 
 ## Context (why)
 
-Legend's sign-in is a demo gate: a name + Hierarchy form that writes a `UserProfile`
-to localStorage. Nothing survives a device switch, and the upcoming phases need a real
-user: phase 3 persists notes/attempts server-side per user, phase 4 (Patient Message +
-LLM proxy) needs authenticated, per-user rate-limited API access — including for
-guests, who are the abuse vector on a public LLM endpoint. Phase 2 makes every visitor
-a server-side user (anonymous or Google) with a session cookie, while changing the
-trainee-visible experience as little as possible.
+The trainee's work (signed/pended notes, addenda, wrap-up attempts) lives in
+localStorage. It dies on sign-out, never follows the user across devices, and
+blocks phase 4 (Patient Message + LLM feedback need the user's notes on the
+server). Phase 3 moves the three work stores to D1, keyed on the better-auth
+account, and retires their localStorage keys.
 
-## Decisions (resolved forks — do not re-litigate)
+## Decisions (resolved forks, do not re-litigate)
 
-1. **Sign-in UX: guest-first + Google button.** The current LegendCare card (first
-   name, last name, Hierarchy, "Start training") stays as the primary path and becomes
-   the guest flow — it silently creates an anonymous server user. A "Sign in with
-   Google" button sits below it for durable cross-device accounts.
-2. **Persona: form once, saved to the account.** First Google sign-in returns to the
-   card in persona mode (name prefilled from Google, editable; grade picked); saved
-   server-side with a server-generated `hcpId`. Returning Google users skip the form
-   entirely. (Persona name change after creation: later, out of scope.)
-3. **Sign-out: keep the full localStorage wipe for everyone** (guests and Google),
-   plus ending the server session. Temporary until phase 3 moves work server-side.
+1. **Scope: notes + addenda + attempts.** Sticky notes stay device-local
+   scratch. Unsigned editor drafts stay in-memory (the phase-0 dispute is
+   untouched by this phase).
+2. **Guests persist like Google users.** One code path; guest work lives under
+   their anonymous `user.id`. A purge job handles abandonment (below).
+3. **No localStorage import, clean break.** Pre-phase-3 device data is
+   abandoned (it is Ryan's test data; there are no real users yet). The
+   `onLinkAccount` re-key (below) replaces the import as the guest-to-Google
+   migration path.
+4. **Server-authoritative, thin client.** D1 is the only store. Fetch on chart
+   open, write through the API, update React state on success. No cache, no
+   sync engine.
+5. **Ownership is better-auth `user.id`, never `hcpId`** (phase-2 review
+   warning: hcpId is non-unique with a 100k value space). `hcpId` remains
+   display data inside the note payload.
 
-## Architecture
+## Schema (migration 0002)
 
-- **Everyone is a server-side user** (Approach A). better-auth >= 1.5 mounted on the
-  existing Hono app at `/api/auth/*`, `database: env.DB` (native D1, no ORM),
-  plugins: `anonymous()` (with `onLinkAccount` wired but data migration deferred to
-  phase 3's import), Google as the ONLY social provider. No email/password ever
-  (workerd can't hash passwords acceptably). No `cookieCache`, no KV secondary
-  storage (open logout bug, Feb 2026).
-- **Sessions:** httpOnly same-origin cookies (better-auth default). No tokens in JS.
-- **Data model:** better-auth's generated tables (user, session, account,
-  verification) via its CLI schema generation, applied with
-  `wrangler d1 migrations create/apply` (`--local` for dev, `--remote` for prod) —
-  this begins the repo's migrations story (`migrations/` dir). The `user` table
-  carries four additional fields (better-auth `additionalFields`): `forename`,
-  `surname`, `grade`, `hcpId`. `hcpId` is generated server-side on persona save,
-  same d9###### format as today's `generateHcpId()`.
-- **Client:** better-auth React client (`createAuthClient`). `App.tsx`'s gate
-  switches from the localStorage `legend-user` key to the session (`useSession`).
-  The in-app `UserProfile` shape (`forename/surname/hcpId/grade`) is now DERIVED
-  from the session user — downstream code (`userNotes.ts` authorship, `isOwnNote`,
-  overreach, WrapUp) does not change.
-- **Secrets/config:** `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-  — prod via `wrangler secret put`, dev via gitignored `.dev.vars`. OAuth client
-  origins/redirects registered for `http://localhost:5173` and
-  `https://legend.ryanhocn.workers.dev` (callback path `/api/auth/callback/google`).
+Three tables, all `REFERENCES user(id) ON DELETE CASCADE` (D1 enforces FKs):
 
-## Flows
+```sql
+user_note      id TEXT PK (server UUID), user_id, case_id, status ('signed'|'incomplete'),
+               payload TEXT (ClinicalNote JSON), created_at, updated_at
+               INDEX (user_id, case_id)
+note_addendum  id TEXT PK, user_id, case_id, note_id (static or user note), body, created_at
+wrapup_attempt PK (user_id, case_id), text, at, signed, updated_at   -- upsert, last attempt only
+```
 
-- **Guest:** fill name + grade -> anonymous sign-in -> persona fields saved onto the
-  anonymous user -> app. Indistinguishable from today to the trainee.
-- **First Google sign-in:** Google button -> OAuth redirect -> back on the card in
-  persona mode (name prefilled, editable; grade) -> save -> app.
-- **Returning Google user:** lands straight in the app (session cookie or fresh
-  Google sign-in), no form.
-- **Sign-out (user bubble):** end server session + sweep `legend*` localStorage keys
-  (except the device-level delete-confirm preference) + reload, as today.
+JSON payload + indexed ownership columns: the note type can evolve without
+migrations; the server owns identity and ownership, the payload owns display
+fields. Addenda are one row each; the client folds them with the existing
+`appendAddendum`. `wrapup_attempt` keeps the current last-attempt-only
+semantics.
 
-## Scope
+## API (Hono, session-gated)
 
-- In scope: better-auth server setup on the phase-1 worker; D1 migrations for auth
-  tables + persona fields; SignInPage rework (guest path, Google button, persona
-  mode); App gate on session instead of localStorage profile; sign-out integration;
-  eslint globals override for `src/worker/**` (phase-1 carry-over); real-D1 test
-  project via `@cloudflare/vitest-pool-workers` (phase-1 carry-over).
-- Out of scope: server persistence of notes/attempts and localStorage import
-  (phase 3); Patient Message + LLM proxy (phase 4); persona name change UI (later);
-  email/password (never); guest-work data migration on account upgrade (phase 3);
-  in-app "upgrade guest to Google" button (phase 2 reaches Google sign-in from the
-  sign-in card only — a signed-in guest upgrades by signing out first; the
-  `onLinkAccount` hook exists for phase 3, nothing calls it yet).
-- Non-goals: multi-provider auth, roles/orgs, Workers Paid tier.
+Middleware resolves the better-auth session once per request
+(`auth.api.getSession`); no session is a 401. Routes:
 
-## Constraints
+- `GET  /api/cases/:caseId/work` — one fetch per chart open: `{ notes, addenda, attempt }`
+- `POST /api/cases/:caseId/notes` — Sign or Pend a draft; server assigns id + timestamps
+- `PUT  /api/notes/:id` — refile an edited incomplete note (ownership-checked)
+- `DELETE /api/notes/:id` — delete an own user note
+- `POST /api/notes/:id/addenda` — append an addendum
+- `PUT  /api/cases/:caseId/attempt` — upsert the wrap-up attempt
 
-- The SPA's downstream contract is frozen: `UserProfile` keeps its shape; note
-  authorship, ownership (`hcpId`/`playerHcpId`), grades, and overreach logic are
-  untouched.
-- Free tier: no scrypt/password paths; Google + anonymous only.
-- Dev/prod parity via the phase-1 vite plugin (auth cookies must work under
-  `npm run dev` on localhost:5173 and in prod).
-- Deploy remains `npm run deploy` only. Remote migrations are a deliberate,
-  Ryan-gated step (`wrangler d1 migrations apply legend-db --remote`).
-- All patient data remain synthetic; Google gives us identity, not patient data.
-  Preserve the training-environment disclaimers on the sign-in card.
+Server generates note ids (`crypto.randomUUID()`), retiring the `user-note-`
+prefix as an identity mechanism. Validation is minimal hand-rolled shape checks
+(no zod; consistent with the no-ORM stance). Every write checks
+`user_id = session.user.id`.
 
-## Tasks (indicative — PLAN.md is authoritative once written)
+## Client
 
-- [x] Server: better-auth config + Hono mount + secrets plumbing -> verify by auth
-      endpoints answering locally (session create/read) with real local D1.
-- [x] Schema: generate better-auth schema, create + apply local migrations (auth
-      tables + persona additionalFields) -> verify by `wrangler d1 migrations list`
-      + a real-D1 route test.
-- [x] Client: auth client + App gate on session -> verify by guest flow end-to-end
-      in dev (anonymous user row exists, app opens, notes attribute correctly).
-- [x] SignInPage: Google button + persona mode -> verify by first/returning Google
-      flows in dev.
-- [x] Sign-out: server session end + existing sweep -> verify by cookie gone + row
-      session revoked + localStorage swept.
-- [x] Carry-overs: eslint worker globals override; vitest-pool-workers project.
-- [x] Gated: remote migrations + `npm run deploy` + live verification of all three
-      flows on legend.ryanhocn.workers.dev.
+- New `src/lib/api.ts` fetch wrapper (JSON in/out, credentials included, typed
+  errors).
+- `PatientWorkspace` swaps `usePersistentState(userNotesKey/addendaKey)` for a
+  `useCaseWork(caseId)` hook: fetch on mount (the workspace already remounts
+  per case), hold in React state, mutate via API-then-setState. Static
+  documents render immediately; user notes merge in when the fetch lands.
+- `WrapUpModule` reads the attempt from the same fetched state, not
+  localStorage.
+- Ownership: `GET /work` filters by the session user, so every fetched user
+  note is the user's own by construction (no flag needed). `isOwnNote`
+  survives only for the static `playerHcpId` persona-note case; the
+  `user-note-` prefix backstop is deleted.
+- `signOut` keeps its sweep (now clears only sticky/scratch keys). The three
+  work keys (`legend-user-notes-*`, `legend-addenda-*`, `legend-wrapup-*`) die.
+- Rides along: delete `generateHcpId` from `src/lib/userNotes.ts` (dead since
+  the server took over) and the dead `USER_KEY`.
 
-## Open questions
+## Guest lifecycle
 
-- None blocking. Exact better-auth API shapes (CLI schema output for D1, anonymous
-  plugin call signatures, React client hooks, Workers `nodejs_compat` specifics on
-  the installed version) to be pinned by research during PLAN.md writing — the plan
-  must cite current docs, not memory.
+- **Upgrade:** `onLinkAccount` re-keys the anonymous user's rows to the new
+  Google user (`UPDATE ... SET user_id` on the three tables). This replaces
+  the localStorage import promised in the phase-2 spec.
+- **Purge:** daily cron trigger on the worker deletes anonymous users with no
+  session row newer than 30 days; FK cascades wipe their work. Closes the
+  phase-2 review warning about unbounded anon rows.
+
+## Error handling
+
+- 401 mid-session: surface the sign-in gate.
+- Failed write: keep the editor/draft state intact and show the failure. A
+  failed Sign never destroys the draft.
+
+## Testing / verify targets
+
+- API tests in the real-D1 workers pool (extends the existing
+  `auth.workers.test.ts` project): CRUD, ownership rejection, 401 without a
+  session, cascade on user delete, `onLinkAccount` re-key.
+- Pure-lib node tests unchanged (182 tests keep passing).
+- `npx tsc -b`, `npm run lint`, `npm run build`, browser click-through
+  (guest sign-in, Sign a note, reload, note still there; sign out and back in
+  as Google, work follows the account after linking).
+
+## Out of scope
+
+- Unsigned draft autosave (phase 0, disputed, separate decision).
+- Sticky notes server-side.
+- Patient Message + LLM proxy (phase 4).
+- Persona name change after creation.
