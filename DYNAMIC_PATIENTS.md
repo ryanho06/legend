@@ -120,12 +120,14 @@ case_event (
 - Same `references "user"("id") on delete cascade` + `(scope, caseId)` index as
   `user_note`, so the existing anon-purge cron cleans up events for free.
 - A pure `applyEvents(bundle: CaseBundle, events: CaseEvent[]): CaseBundle` fold in
-  `src/lib` (React-free, unit-tested exactly like `rubric.ts`), applied **once** where
-  `App.tsx` builds the `CaseContext.Provider` value. That single choke point updates
-  every consumer (sidebar, summary, SmartText autofill, rubric, the document merge)
-  through the existing `useCase()` seam. This is a better seam than the current
-  `PatientWorkspace` document merge because encounters, vitals points, and summary
-  patches are not documents; documents are just one event kind.
+  `src/lib` (React-free, unit-tested exactly like `rubric.ts`). SHIPPED (Plan 2); SEAM
+  CORRECTED versus this research note: the fold is applied as a **nested
+  `CaseContext.Provider` inside `PatientWorkspace`**, NOT at `App.tsx` (which provides the
+  raw, unfolded bundle) — see `DYNAMIC_PATIENTS_SPEC.md` §5.3. That single choke point
+  updates every consumer (sidebar, summary, SmartText autofill, rubric, the document
+  merge) through the existing `useCase()` seam. (Also superseded: this doc's server-side
+  `case_event` materialization is now Model B — server stores only the clock, client
+  reveals authored events; see the SPEC.)
 - Author dynamics per case as `src/data/patients/<caseId>/events.ts` (extends the
   `CASE_AUTHORING.md` contract): scheduled events (`at:` sim-offset, optionally
   anchored to another event, e.g. sensitivities at `cultureSent + 60h`) and triggered

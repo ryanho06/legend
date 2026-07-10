@@ -2,9 +2,13 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-10 (session end; Ryan resetting context)
-Branch / worktree: main (pushed to origin at session end)
-Latest session (5d8b502..HEAD, 31 commits incl. 2 from a parallel session):
+Last updated: 2026-07-10 (Dynamic Patients Plans 1-2 shipped locally; paused before Plan 3)
+Branch / worktree: main (this session NOT pushed, per standing rule)
+Latest session (8582e98..b63b37b, 11 commits): Dynamic Patients v1 started — SPEC approved
++ committed (engine = Model B: server clock + client reveal, `case_event` deferred), Plans
+1 (time model) + 2 (applyEvents fold refactor) built subagent-driven, review-clean, and
+browser-verified on cholangitis001. NOT pushed. See Done + In flight.
+--- PRIOR session (5d8b502..8582e98, 31 commits incl. 2 from a parallel session):
 Phase 3 SHIPPED end-to-end (built, reviewed, browser-verified, deployed with
 remote migrations 0002+0003; live write loop proven in prod), PLUS a post-ship
 wave: profile/alias feature (ProfileMenu on the user bubble, user_alias table,
@@ -146,12 +150,16 @@ feedback (cce42a4..dc9f29b).
   climbing 118→124, dual culprits indapamide+sertraline, seizure filed as a "funny
   turn". General Medicine, minGrade fy, progress note. tsc + 189 tests + lint green.
   Case registry is now 17 folders.
-- Dynamic patients: research complete 2026-07-10 (5-stream sweep), writeup in repo
-  `DYNAMIC_PATIENTS.md`. Recommended direction: event-sourcing (`case_event` log) +
-  action-keyed sim clock + lazy reveal on read; pre-authored/locked chart content for
-  the rubric, LLM for prose only; Patient Message on the same event stream. Six product
-  decisions still Ryan's (sim-time model, rubric fairness, v1 content policy, graded vs
-  formative, multiplayer scope column, branch count). Not specced or approved yet.
+- Dynamic patients v1: SPEC approved + committed (`DYNAMIC_PATIENTS_SPEC.md`, e0ca413;
+  Model B revision b63b37b). All 6 forks resolved (spec §15). Engine = **Model B**: server
+  stores only `case_session.simNow`; the client reveals authored `events.ts` by that clock;
+  NO `case_event` table in v1 (deferred to LLM/multiplayer). **Plan 1** (time model:
+  `lib/simTime.ts` UTC epoch formatters, optional `CaseBundle.anchor` on cholangitis001,
+  `buildUserNote`/`refileUserNote`/`buildAddendumBlock` now take `nowSec: number` and stamp
+  sim-time) DONE (b604247..1e525a0). **Plan 2** (fold refactor: `lib/applyEvents.ts` +
+  `CaseEvent` + `workToEvents`, PatientWorkspace folds via a NESTED `CaseContext.Provider`,
+  hand-merge deleted) DONE (18b3d82..45a7e7d). Both browser-verified on cholangitis001.
+  Plans 3-4 not written. NEXT: Plan 3 (server engine, Model B) — see Next concrete step.
 - Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
   ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
   Prior range 8574cee..5d8b502 (backend pivot: research,
@@ -159,13 +167,21 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-Phase 4: Patient Message (per-patient MDT chat, LLM personas). Not specced.
-Start with spec+plan (brainstorm with Ryan). Read FIRST: DYNAMIC_PATIENTS.md
-(six product decisions still Ryan's) and docs/PERMISSIONS_RESEARCH.md — the
-one hard prerequisite decision: the shared scope column (userId vs sessionId)
-for the assignment ACL and the case_event log, settled together BEFORE either
-table is created. The LLM proxy route needs per-user rate limiting (guests are
-the abuse vector).
+Write + execute **Dynamic Patients Plan 3** (server engine, Model B). Read FIRST:
+`DYNAMIC_PATIENTS_SPEC.md` §5 (esp. 5.1 the ONE table `case_session`, and 5.4 the
+clock+reveal rails) and §15 decisions. Scope: migration 0004 (`case_session(scope,
+caseId, simNow, updatedAt)`, PK(scope,caseId), FK scope->user(id) cascade); a session
+router (GET/PUT `/api/cases/:caseId/session`, cloning `work.ts`'s session middleware);
+ONE rekey UPDATE line in `rekey.ts` (`update or replace case_session set scope`); extend
+`CaseEvent` + `applyEvents` with sim-reveal kinds (result.release / encounter.append /
+vitals.append / flag.set) + a `seq` ordering key; a pure client reveal filter over a
+case's `events.ts` by `simNow`; wire `useCaseWork` to the /session clock. Grounding
+already read this session: work.ts, index.ts, migration 0002/0003, rekey.ts. Then Plan 4
+= product loop (chronos, NPC team, contribution tracker, cholangitis001 `events.ts`
+authoring incl. the missing micro Final reveal, CI timeline walker). Patient Message
+(old "phase 4", per-patient MDT chat, LLM personas; see the Patient Message scope bullet
+below and docs/PERMISSIONS_RESEARCH.md) comes AFTER dynamic patients and rides the
+deferred `case_event` log; its LLM proxy route needs per-user rate limiting.
 
 Phase 3 ship record (2026-07-10, fully closed):
 - Remote migrations 0002+0003 applied; final live version 79d2a874 (an earlier
@@ -246,8 +262,9 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   `npm run deploy` + live checks + Google-link check, all Ryan-gated) — see
   "Next concrete step" above. Phase 3's spec/plan/build/browser-verify are
   all done; only the deploy is outstanding.
-- Verify target: `npm test` (193 tests, 25 files, node pool), `npm run
-  test:workers` (25 tests, 3 files, real local D1), `npx tsc -b`, `npm run lint`
+- Verify target: `npm test` (209 tests, 28 files, node pool — verified green this
+  session), `npm run test:workers` (25 tests, 3 files, real local D1 — NOT re-run this
+  session, unchanged), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
   generated `worker-configuration.d.ts` is eslint-ignored), `npm run build`
   (emits `dist/client` + `dist/legend` since the Cloudflare vite plugin).
