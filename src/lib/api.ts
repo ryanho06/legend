@@ -58,3 +58,23 @@ export const apiPutAttempt = (caseId: string, attempt: StoredAttempt) =>
 
 export const apiDeleteAttempt = (caseId: string) =>
   request<void>(`/cases/${caseId}/attempt`, { method: "DELETE" });
+
+/** A persona (forename/surname/grade/hcpId) the trainee has held. */
+export type Alias = {
+  id: string;
+  forename: string | null;
+  surname: string | null;
+  grade: string | null;
+  hcpId: string;
+  createdAt: number;
+};
+
+export type Persona = Pick<Alias, "forename" | "surname" | "grade" | "hcpId">;
+
+export const fetchAliases = () => request<{ aliases: Alias[] }>(`/profile/aliases`);
+
+export const switchAlias = (aliasId: string) =>
+  request<Persona>(`/profile/aliases/switch`, {
+    method: "POST",
+    body: JSON.stringify({ aliasId }),
+  });
