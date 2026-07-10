@@ -4,6 +4,7 @@ import { env } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import { createAuth } from "./auth";
 import worker from "./index";
+import { purgeStaleAnonUsers } from "./purge";
 import { rekeyUserWork } from "./rekey";
 
 describe("user_work schema", () => {
@@ -242,5 +243,33 @@ describe("rekeyUserWork", () => {
       `SELECT text FROM wrapup_attempt WHERE userId = ?1`,
     ).bind(google).all<{ text: string }>();
     expect(attempts.results.map((r) => r.text)).toEqual(["guest attempt"]);
+  });
+});
+
+describe("purgeStaleAnonUsers", () => {
+  test("session expiry is stored as an ISO string (purge comparison depends on it)", async () => {
+    await anonCookie();
+    const row = await env.DB.prepare(`SELECT expiresAt FROM session LIMIT 1`).first<{ expiresAt: string }>();
+    expect(String(row?.expiresAt)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  test("purges anon users with no live session, keeps active ones", async () => {
+    const auth = createAuth(env as unknown as Env, "http://localhost");
+    const stale = (await auth.api.signInAnonymous())!.user.id;
+    const active = (await auth.api.signInAnonymous())!.user.id;
+    await env.DB.prepare(`UPDATE session SET expiresAt = '2020-01-01T00:00:00.000Z' WHERE userId = ?1`)
+      .bind(stale)
+      .run();
+    await env.DB.prepare(
+      `INSERT INTO user_note (id, userId, caseId, status, payload, createdAt, updatedAt)
+       VALUES ('stale-n1', ?1, 'cholangitis001', 'signed', '{}', 1, 1)`,
+    ).bind(stale).run();
+
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    await purgeStaleAnonUsers(env.DB, cutoff);
+
+    expect(await env.DB.prepare(`SELECT id FROM user WHERE id = ?1`).bind(stale).first()).toBeNull();
+    expect(await env.DB.prepare(`SELECT id FROM user_note WHERE id = 'stale-n1'`).first()).toBeNull();
+    expect(await env.DB.prepare(`SELECT id FROM user WHERE id = ?1`).bind(active).first()).not.toBeNull();
   });
 });

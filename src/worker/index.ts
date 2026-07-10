@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { createAuth } from "./auth";
+import { purgeStaleAnonUsers } from "./purge";
 import { work } from "./work";
 
-const app = new Hono<{ Bindings: Env }>().basePath("/api");
+export const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
 app.on(["GET", "POST"], "/auth/*", (c) =>
   createAuth(c.env, new URL(c.req.url).origin).handler(c.req.raw),
@@ -21,4 +22,12 @@ app.get("/health", async (c) => {
 
 app.route("/", work);
 
-export default app;
+const PURGE_AFTER_DAYS = 30;
+
+export default {
+  fetch: app.fetch,
+  scheduled: async (_controller, env) => {
+    const cutoff = new Date(Date.now() - PURGE_AFTER_DAYS * 86_400_000).toISOString();
+    await purgeStaleAnonUsers(env.DB, cutoff);
+  },
+} satisfies ExportedHandler<Env>;

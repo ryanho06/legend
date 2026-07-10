@@ -14,5 +14,8 @@
       "database_name": "legend-db",
       "database_id": "e0fcc134-51b7-477f-a4cc-23786fafeb6f"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  }
 }

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import app from "./index";
+import { app } from "./index";
 
 const liveDb = {
   prepare: () => ({ first: async () => ({ ok: 1 }) }),
