@@ -1,6 +1,10 @@
 # Dynamic Patients v1: design spec
 
-Status: design approved 2026-07-10 (forks A/B/C/D confirmed), pre-implementation.
+Status: design approved 2026-07-10 (forks A/B/C/D confirmed). Engine (§5-§7, Model B) SHIPPED
+2026-07-10 as Plan 3 (commit range 6526b88..1939dea, on main, not pushed; Ryan-gated remote
+migration + deploy still pending). Pilot content authoring (§8-§11: chronos, NPC notes,
+cholangitis001 `events.ts`) is Plan 4, NOT yet started, so the engine currently ships INERT (no
+case authors an `events.ts`).
 Author: Ryan + Claude. Input: `DYNAMIC_PATIENTS.md` (research) plus a four-stream
 codebase-fit audit of the shipped Phase 3 code. This is the SPEC. A PLAN follows via
 the writing-plans step; do not implement from this document directly.

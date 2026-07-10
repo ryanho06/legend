@@ -2,10 +2,11 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-10 (Dynamic Patients Plan 3, server engine, shipped locally; full
-suite green; Plan 4 next)
+Last updated: 2026-07-10 (Dynamic Patients Plan 3, server engine, built + verified locally;
+full suite green, final review Ready-to-ship + 1 fix applied, browser PASS; Ryan-gated ship
+still pending; Plan 4 next)
 Branch / worktree: main (this session NOT pushed, per standing rule)
-Latest session (e26d448..4454aa2, 9 commits): Dynamic Patients Plan 3 (server engine,
+Latest session (e26d448..1939dea, 11 commits): Dynamic Patients Plan 3 (server engine,
 Model B) built subagent-driven off a written plan: migration 0004 `case_session`, the
 `/api/cases/:caseId/session` clock router, the rekey line, extended `applyEvents` +
 `AuthoredEvent`, the pure `revealEvents` filter, and the client wiring (`useCaseWork`
@@ -36,8 +37,8 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
-- Dynamic Patients Plan 3, server engine (Model B) (2026-07-10, 6526b88..4454aa2, 9
-  commits, subagent-driven off a written plan): migration 0004 adds
+- Dynamic Patients Plan 3, server engine (Model B) (2026-07-10, 6526b88..1939dea, 10
+  commits, subagent-driven off a written plan, all 7 tasks review-clean): migration 0004 adds
   `case_session(scope, caseId, simNow, updatedAt)` (PK(scope,caseId), FK
   scope->user(id) cascade); `src/worker/session.ts` is the session-gated clock router
   (`GET`/`PUT /api/cases/:caseId/session`, lazy-create at simNow=0 with a race-free
@@ -50,7 +51,13 @@ feedback (cce42a4..dc9f29b).
   exposes `simNow`/`advanceSim` (forward-only, last-write-wins) and `PatientWorkspace`
   composes the authored reveal into the `applyEvents` fold. Ships INERT: no case
   authors `events.ts` yet (that is Plan 4). Full suite green (tsc, 219 node-pool
-  tests/29 files, 33 workers-pool tests/4 files, lint, build). Caveat found during
+  tests/29 files, 33 workers-pool tests/4 files, lint, build). Final whole-branch review
+  (opus) returned Ready-to-ship; its one elevated finding (a `Promise.all` that coupled the
+  clock fetch to the notes load, so a `/session` failure, e.g. before the remote migration,
+  would block the notes render) was fixed by fetching the clock independently and degrading
+  to simNow=0 (commit 1939dea). Browser-verified PASS (chrome-devtools-axi, guest,
+  cholangitis001): the live server ran Plan 3 code (GET /session -> 200 {simNow:0}), the
+  chart rendered identically, zero console errors, note-sign flow intact. Caveat found during
   grounding (Flag 1): cholangitis001's static note `timestamp` epochs sit 24h behind
   its `anchor` (notes filed 15/06, anchor 16/06 17:00 UTC); the engine itself is
   unaffected (it compares `at`/`simNow` offsets, never static epochs), but Plan 4 must
@@ -190,10 +197,10 @@ feedback (cce42a4..dc9f29b).
   hand-merge deleted) DONE (18b3d82..45a7e7d). Both browser-verified on cholangitis001.
   **Plan 3** (server engine: `case_session` migration + clock router + rekey line +
   sim-reveal `CaseEvent` kinds + `AuthoredEvent` + `revealEvents` + client wiring) DONE
-  (6526b88..4454aa2), full suite green; see the Done entry above for detail and the
-  Flag-1 caveat. Ships INERT (no case authors `events.ts` yet, so there is no new
-  product-visible surface to browser-verify). Plan 4 not written. NEXT: Plan 4 (product
-  loop); see Next concrete step.
+  (6526b88..1939dea), full suite green, final review Ready-to-ship (1 fix applied),
+  browser PASS; see the Done entry above for detail and the Flag-1 caveat. Ships INERT
+  (no case authors `events.ts` yet). Plan 4 not written. NEXT: Plan 4 (product loop);
+  see Next concrete step.
 - Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
   ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
   Prior range 8574cee..5d8b502 (backend pivot: research,
@@ -310,9 +317,11 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
 - Deploy is `npm run deploy` ONLY; remote D1 migrations
   (`npx wrangler d1 migrations apply legend-db --remote`) always gated on Ryan.
 - Dynamic Patients Plan 3 ship gate outstanding (Ryan-gated, NOT done this plan): remote
-  migration 0004 (`npx wrangler d1 migrations apply legend-db --remote`) + `npm run
-  deploy`. The engine only exists in local D1 + the unshipped worker build until this
-  runs; it ships INERT either way (no case authors `events.ts` yet).
+  migration 0004 (`npx wrangler d1 migrations apply legend-db --remote`) STRICTLY BEFORE
+  `npm run deploy` (order matters: a worker live before the table exists would 500 on
+  `/session`; the decouple fix in 1939dea keeps notes rendering even then, but sequence it
+  right regardless). The engine only exists in local D1 + the unshipped worker build until
+  this runs; it ships INERT either way (no case authors `events.ts` yet).
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
 - Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
   reload or they're lost. Signed/pended user notes persist server-side in D1

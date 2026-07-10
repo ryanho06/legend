@@ -1,9 +1,11 @@
 # Dynamic Patients: research and design direction
 
-Status: research complete, not yet specced or approved. Written 2026-07-10 from a
-five-stream research sweep (med-ed prior art, game/sim design patterns, Cloudflare
-free-tier primitives, LLM content generation, and a codebase-fit audit). Sources at
-the bottom. This is the input to a future SPEC/PLAN, not an approved plan.
+Status: research complete; SUPERSEDED by the approved `DYNAMIC_PATIENTS_SPEC.md` (Model B),
+whose engine SHIPPED 2026-07-10 (Plans 1-3, commit range 6526b88..1939dea; engine inert
+pending Plan 4 content). Written 2026-07-10 from a five-stream research sweep (med-ed prior
+art, game/sim design patterns, Cloudflare free-tier primitives, LLM content generation, and a
+codebase-fit audit). Sources at the bottom. Kept for the research rationale; do NOT treat any
+data-model sketch below as current, see the SPEC and the inline notes.
 
 ## The goal
 
@@ -116,6 +118,13 @@ case_event (
   seq INTEGER, createdAt INTEGER
 )
 ```
+
+> SHIPPED-CODE CORRECTION (Model B, Plan 3): the actual `case_session` (migration 0004) is
+> `case_session(scope, caseId, simNow, updatedAt)`, PK `(scope, caseId)`, FK `scope -> user(id)`
+> cascade. NO `id`, `seed`, or `params` column; `simNow`/`updatedAt`, not `sim_now`/`createdAt`.
+> The `case_event` table sketched above was DEFERRED (v1 stores only the clock; the client
+> reveals its own `events.ts`), returning only with LLM/multiplayer. Source of record:
+> `DYNAMIC_PATIENTS_SPEC.md` §5.1.
 
 - Same `references "user"("id") on delete cascade` + `(scope, caseId)` index as
   `user_note`, so the existing anon-purge cron cleans up events for free.
