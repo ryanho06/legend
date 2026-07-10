@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { createAuth } from "./auth";
+import { profile } from "./profile";
 import { purgeStaleAnonUsers } from "./purge";
 import { work } from "./work";
 
@@ -21,6 +22,7 @@ app.get("/health", async (c) => {
 });
 
 app.route("/", work);
+app.route("/", profile);
 
 const PURGE_AFTER_DAYS = 30;
 
