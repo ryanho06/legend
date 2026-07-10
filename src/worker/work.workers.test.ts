@@ -69,3 +69,46 @@ describe("GET /api/cases/:caseId/work", () => {
     expect(await res.json()).toEqual({ notes: [], addenda: [], attempt: null });
   });
 });
+
+describe("POST /api/cases/:caseId/notes", () => {
+  test("creates, assigns a server id, and roundtrips through GET", async () => {
+    const cookie = await anonCookie();
+    const payload = { kind: "note", noteType: "Progress Note", status: "signed", body: "AKI resolving" };
+    const res = await callWorker("/api/cases/cholangitis001/notes", {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ status: "signed", payload }),
+    });
+    expect(res.status).toBe(201);
+    const stored = (await res.json()) as { id: string; body: string };
+    expect(stored.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(stored.body).toBe("AKI resolving");
+
+    const workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    const data = (await workRes.json()) as { notes: { id: string }[] };
+    expect(data.notes.map((n) => n.id)).toEqual([stored.id]);
+  });
+
+  test("rejects a malformed body", async () => {
+    const cookie = await anonCookie();
+    const res = await callWorker("/api/cases/cholangitis001/notes", {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ status: "published", payload: null }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  test("one user's notes are invisible to another", async () => {
+    const cookieA = await anonCookie();
+    const cookieB = await anonCookie();
+    await callWorker("/api/cases/cholangitis001/notes", {
+      method: "POST",
+      headers: { cookie: cookieA, "content-type": "application/json" },
+      body: JSON.stringify({ status: "incomplete", payload: { body: "mine" } }),
+    });
+    const res = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie: cookieB } });
+    const data = (await res.json()) as { notes: unknown[] };
+    expect(data.notes).toEqual([]);
+  });
+});
