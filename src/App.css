@@ -2862,6 +2862,17 @@ button {
   font-size: 10.5px;
 }
 
+.signin-error {
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: #fceeee;
+  border: 1px solid #e0b4b4;
+  border-radius: 2px;
+  color: #9d1c1c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 /* ---------- Notes browser QoL ---------- */
 
 .notes-search {

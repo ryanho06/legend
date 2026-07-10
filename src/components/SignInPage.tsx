@@ -26,14 +26,18 @@ export function SignInPage({
   const [surname, setSurname] = useState(initialName?.surname ?? "");
   const [grade, setGrade] = useState<Grade>("fy");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const ready = forename.trim().length > 0 && surname.trim().length > 0 && !saving;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!ready) return;
     setSaving(true);
+    setError(null);
     try {
       await onComplete({ forename: forename.trim(), surname: surname.trim(), grade });
+    } catch {
+      setError("Could not start the session. Check your connection and try again.");
     } finally {
       setSaving(false);
     }
@@ -77,6 +81,8 @@ export function SignInPage({
             ))}
           </select>
         </label>
+
+        {error && <div className="signin-error">{error}</div>}
 
         <button className="signin-submit" type="submit" disabled={!ready}>
           <LogIn size={14} />
