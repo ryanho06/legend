@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { createAuth } from "./auth";
+import { work } from "./work";
 
 const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
@@ -17,5 +18,7 @@ app.get("/health", async (c) => {
   }
   return c.json({ ok: true, db });
 });
+
+app.route("/", work);
 
 export default app;
