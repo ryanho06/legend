@@ -161,3 +161,40 @@ describe("PUT and DELETE /api/notes/:id", () => {
     expect(((await workRes.json()) as { notes: unknown[] }).notes).toEqual([]);
   });
 });
+
+describe("addenda and attempts", () => {
+  test("addendum rows accumulate and come back in order", async () => {
+    const cookie = await anonCookie();
+    for (const body of ["first", "second"]) {
+      const res = await callWorker("/api/notes/note-adm-1/addenda", {
+        method: "POST",
+        headers: { cookie, "content-type": "application/json" },
+        body: JSON.stringify({ caseId: "cholangitis001", body }),
+      });
+      expect(res.status).toBe(201);
+    }
+    const workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    const data = (await workRes.json()) as { addenda: { noteId: string; body: string }[] };
+    expect(data.addenda.map((a) => a.body)).toEqual(["first", "second"]);
+    expect(data.addenda[0].noteId).toBe("note-adm-1");
+  });
+
+  test("attempt upserts and clears", async () => {
+    const cookie = await anonCookie();
+    const put = (text: string) =>
+      callWorker("/api/cases/cholangitis001/attempt", {
+        method: "PUT",
+        headers: { cookie, "content-type": "application/json" },
+        body: JSON.stringify({ text, at: "10/07 12:00", signed: true }),
+      });
+    expect((await put("v1")).status).toBe(200);
+    expect((await put("v2")).status).toBe(200);
+    let workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    expect(((await workRes.json()) as { attempt: { text: string } }).attempt.text).toBe("v2");
+
+    const del = await callWorker("/api/cases/cholangitis001/attempt", { method: "DELETE", headers: { cookie } });
+    expect(del.status).toBe(204);
+    workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    expect(((await workRes.json()) as { attempt: unknown }).attempt).toBeNull();
+  });
+});

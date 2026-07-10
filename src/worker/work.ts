@@ -88,3 +88,47 @@ work.delete("/notes/:id", async (c) => {
   if (res.meta.changes === 0) return c.json({ error: "not found" }, 404);
   return c.body(null, 204);
 });
+
+work.post("/notes/:id/addenda", async (c) => {
+  const raw = (await c.req.json().catch(() => null)) as { caseId?: unknown; body?: unknown } | null;
+  if (!raw || typeof raw.caseId !== "string" || typeof raw.body !== "string" || raw.body.length === 0)
+    return c.json({ error: "bad request" }, 400);
+  const row = {
+    id: crypto.randomUUID(),
+    noteId: c.req.param("id"),
+    body: raw.body,
+    createdAt: Date.now(),
+  };
+  await c.env.DB.prepare(
+    `INSERT INTO note_addendum (id, userId, caseId, noteId, body, createdAt)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+  )
+    .bind(row.id, c.get("userId"), raw.caseId, row.noteId, row.body, row.createdAt)
+    .run();
+  return c.json({ noteId: row.noteId, body: row.body, createdAt: row.createdAt }, 201);
+});
+
+work.put("/cases/:caseId/attempt", async (c) => {
+  const raw = (await c.req.json().catch(() => null)) as
+    | { text?: unknown; at?: unknown; signed?: unknown }
+    | null;
+  if (!raw || typeof raw.text !== "string" || typeof raw.at !== "string" || typeof raw.signed !== "boolean")
+    return c.json({ error: "bad request" }, 400);
+  await c.env.DB.prepare(
+    `INSERT INTO wrapup_attempt (userId, caseId, text, at, signed, updatedAt)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+     ON CONFLICT (userId, caseId) DO UPDATE SET text = ?3, at = ?4, signed = ?5, updatedAt = ?6`,
+  )
+    .bind(c.get("userId"), c.req.param("caseId"), raw.text, raw.at, raw.signed ? 1 : 0, Date.now())
+    .run();
+  return c.json({ ok: true });
+});
+
+work.delete("/cases/:caseId/attempt", async (c) => {
+  await c.env.DB.prepare(
+    `DELETE FROM wrapup_attempt WHERE userId = ?1 AND caseId = ?2`,
+  )
+    .bind(c.get("userId"), c.req.param("caseId"))
+    .run();
+  return c.body(null, 204);
+});
