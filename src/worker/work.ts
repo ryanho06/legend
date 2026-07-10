@@ -64,3 +64,27 @@ work.post("/cases/:caseId/notes", async (c) => {
     .run();
   return c.json(payload, 201);
 });
+
+work.put("/notes/:id", async (c) => {
+  const parsed = parseNoteBody(await c.req.json().catch(() => null));
+  if (!parsed) return c.json({ error: "bad request" }, 400);
+  const id = c.req.param("id");
+  const payload = { ...parsed.payload, id, status: parsed.status };
+  const res = await c.env.DB.prepare(
+    `UPDATE user_note SET status = ?1, payload = ?2, updatedAt = ?3 WHERE id = ?4 AND userId = ?5`,
+  )
+    .bind(parsed.status, JSON.stringify(payload), Date.now(), id, c.get("userId"))
+    .run();
+  if (res.meta.changes === 0) return c.json({ error: "not found" }, 404);
+  return c.json(payload);
+});
+
+work.delete("/notes/:id", async (c) => {
+  const res = await c.env.DB.prepare(
+    `DELETE FROM user_note WHERE id = ?1 AND userId = ?2`,
+  )
+    .bind(c.req.param("id"), c.get("userId"))
+    .run();
+  if (res.meta.changes === 0) return c.json({ error: "not found" }, 404);
+  return c.body(null, 204);
+});

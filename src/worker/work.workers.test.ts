@@ -56,6 +56,15 @@ async function callWorker(path: string, init?: RequestInit): Promise<Response> {
   return res as unknown as Response;
 }
 
+async function createNote(cookie: string, body = "v1", status = "incomplete") {
+  const res = await callWorker("/api/cases/cholangitis001/notes", {
+    method: "POST",
+    headers: { cookie, "content-type": "application/json" },
+    body: JSON.stringify({ status, payload: { body } }),
+  });
+  return (await res.json()) as { id: string };
+}
+
 describe("GET /api/cases/:caseId/work", () => {
   test("401 without a session", async () => {
     const res = await callWorker("/api/cases/cholangitis001/work");
@@ -110,5 +119,45 @@ describe("POST /api/cases/:caseId/notes", () => {
     const res = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie: cookieB } });
     const data = (await res.json()) as { notes: unknown[] };
     expect(data.notes).toEqual([]);
+  });
+});
+
+describe("PUT and DELETE /api/notes/:id", () => {
+  test("refile replaces the payload in place", async () => {
+    const cookie = await anonCookie();
+    const note = await createNote(cookie);
+    const res = await callWorker(`/api/notes/${note.id}`, {
+      method: "PUT",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ status: "signed", payload: { id: note.id, body: "v2" } }),
+    });
+    expect(res.status).toBe(200);
+    const workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    const data = (await workRes.json()) as { notes: { id: string; body: string; status: string }[] };
+    expect(data.notes).toHaveLength(1);
+    expect(data.notes[0]).toMatchObject({ id: note.id, body: "v2", status: "signed" });
+  });
+
+  test("cannot refile or delete another user's note", async () => {
+    const owner = await anonCookie();
+    const attacker = await anonCookie();
+    const note = await createNote(owner);
+    const put = await callWorker(`/api/notes/${note.id}`, {
+      method: "PUT",
+      headers: { cookie: attacker, "content-type": "application/json" },
+      body: JSON.stringify({ status: "signed", payload: { body: "stolen" } }),
+    });
+    expect(put.status).toBe(404);
+    const del = await callWorker(`/api/notes/${note.id}`, { method: "DELETE", headers: { cookie: attacker } });
+    expect(del.status).toBe(404);
+  });
+
+  test("delete removes the note", async () => {
+    const cookie = await anonCookie();
+    const note = await createNote(cookie);
+    const del = await callWorker(`/api/notes/${note.id}`, { method: "DELETE", headers: { cookie } });
+    expect(del.status).toBe(204);
+    const workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
+    expect(((await workRes.json()) as { notes: unknown[] }).notes).toEqual([]);
   });
 });
