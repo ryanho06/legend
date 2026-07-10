@@ -1,6 +1,7 @@
-import { LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { fetchAliases, switchAlias, type Alias } from "../../lib/api";
+import { authClient, useSession } from "../../lib/authClient";
 import { gradeLabel } from "../../lib/grades";
 import { signOut } from "../../lib/session";
 import type { Grade, UserProfile } from "../../types";
@@ -27,6 +28,12 @@ export function ProfileMenu({ user, onClose }: { user: UserProfile; onClose: () 
   const [aliases, setAliases] = useState<Alias[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
+  const [linking, setLinking] = useState(false);
+  const { data: session } = useSession();
+  // Guests get a link path: signing in with Google FROM the live guest session
+  // makes better-auth link the accounts, and onLinkAccount re-keys their
+  // notes/attempts onto the Google user. Signing out first would orphan them.
+  const isGuest = session?.user.isAnonymous === true;
 
   useEffect(() => {
     let live = true;
@@ -122,6 +129,25 @@ export function ProfileMenu({ user, onClose }: { user: UserProfile; onClose: () 
             </li>
           ))}
         </ul>
+      )}
+
+      {isGuest && (
+        <>
+          <button
+            className="profile-link-google"
+            disabled={linking}
+            onClick={() => {
+              setLinking(true);
+              void authClient.signIn.social({ provider: "google", callbackURL: "/" });
+            }}
+          >
+            <LogIn size={14} />
+            {linking ? "Redirecting to Google…" : "Link Google account"}
+          </button>
+          <div className="profile-link-hint">
+            Keeps your notes and moves them to your Google account.
+          </div>
+        </>
       )}
 
       <button

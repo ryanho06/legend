@@ -294,6 +294,38 @@ button {
   cursor: default;
 }
 
+.profile-link-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px;
+  border: 1px solid #3d6c94;
+  background: #e3edf5;
+  color: #1f4e79;
+  border-radius: 3px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.profile-link-google:hover {
+  background: #d3e2ef;
+}
+
+.profile-link-google:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-link-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #667;
+  text-align: center;
+}
+
 .profile-signout {
   display: flex;
   align-items: center;
