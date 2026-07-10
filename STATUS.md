@@ -118,8 +118,9 @@ feedback (cce42a4..dc9f29b).
   bundle-aware builds (PROGRESS embeds vitals+labs, new PTWR shell); edit/addendum
   on owned notes; rubric trigger hygiene (PROGRESS auto-text can never score,
   registry-wide guard test); README rewritten for judges.
-- Case fleet: 16 case folders exist (cholangitis001 reference + 15 generated).
-  Case generation is DONE for now — do not queue more from CASE_BACKLOG.md.
+- Case fleet: 17 registry folders = 16 clinical cases (cholangitis001 reference +
+  15 generated, incl. hyponatraemia001 finished 2026-07-10) + the test001 TestList
+  patient. Case generation is DONE for now — do not queue more from CASE_BACKLOG.md.
 - Context shift (2026-07-09): the hackathon application did NOT come through.
   Judges no longer matter; optimize for real users and the product roadmap, not
   a demo. Memory [[legend-hackathon-context]] updated to match.
