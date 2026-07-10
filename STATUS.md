@@ -2,11 +2,16 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-10
-Branch / worktree: main
-Latest session: Phase 3 server-side notes/attempts BUILT and browser-verified
-(990d551..93ab9ea: trainee notes, addenda, and wrap-up attempts moved from
-localStorage to D1 via a session-gated Hono router; see Done entry below).
+Last updated: 2026-07-10 (session end; Ryan resetting context)
+Branch / worktree: main (pushed to origin at session end)
+Latest session (5d8b502..HEAD, 31 commits incl. 2 from a parallel session):
+Phase 3 SHIPPED end-to-end (built, reviewed, browser-verified, deployed with
+remote migrations 0002+0003; live write loop proven in prod), PLUS a post-ship
+wave: profile/alias feature (ProfileMenu on the user bubble, user_alias table,
+switch route, guest "Link Google account" button), quoted-secrets OAuth
+incident root-caused and fixed live, TestList test patient, staff-ID display
+on notes, permissions research doc. Live version 79d2a874 at
+legend.ryanhocn.workers.dev. See Done entries below.
 Same day, earlier: Phase 2 real accounts SHIPPED (7ee4b06..5d8b502: better-auth
 at /api/auth, anonymous guests + Google, persona on the user table, D1
 migrations local+remote, session-gated SPA; secrets in prod; live
@@ -18,6 +23,38 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
+- Post-ship wave (2026-07-10, after the phase-3 ship, ..c00f70b + docs):
+  - Profile/aliases (opus agent, worktree, merged f083a58): user bubble opens
+    `ProfileMenu` (persona, previous aliases, Switch, Sign out inside);
+    `user_alias` table (migration 0003, applied LOCAL + REMOTE), session-gated
+    `/api/profile/aliases` + `/switch` (dedicated route because hcpId is
+    input:false). Guest "Link Google account" button added (c63b508) — the
+    only UI path that triggers the onLinkAccount re-key; logout-then-Google
+    orphans guest work BY DESIGN (per-user isolation).
+  - Rekey fix (0dd36e9): alias rows follow the link and the outgoing guest
+    persona is snapshotted as a previous alias (was: cascade-deleted).
+    Helpers extracted to `src/worker/persona.ts` (avoids import cycle).
+  - Staff ID on notes (c00f70b): authorId shown in note rows, preview header,
+    and sign-off; disambiguates same-name authors.
+  - TestList test patient (opus agent, 8150de6): `test001`, "Test, Test",
+    MRN LEG-T00001, specialty "TestList"; sanctioned non-clinical exception
+    documented in CASE_AUTHORING.md. Future multiplayer-permissions testbed.
+  - Permissions research (opus agent, 78d26d3): docs/PERMISSIONS_RESEARCH.md.
+    Recommendation: better-auth admin plugin + adminUserIds secret bootstrap +
+    one-time invite codes; guests stay passwordless (purge cron handles junk);
+    per-patient assignment ACL rows under a small global role set. KEY WARNING
+    for phase 4: settle userId-vs-sessionId as the shared scope column for the
+    ACL and the dynamic-patients case_event log TOGETHER, before either exists.
+  - OAuth incident (live, root-caused via systematic debugging, docs 519af8f):
+    prod Google secrets carried literal wrapping quotes (dotenv strips them
+    locally; `wrangler secret put` stores them literally) -> Google rejected
+    `"865...com"` with invalid_client. Fixed by re-putting clean values;
+    gotcha documented in CLAUDE.md Secrets bullet. Google click-through +
+    guest-link flow verified live by Ryan afterwards.
+  - Shipped to prod at session end (Ryan-approved): remote migration 0003,
+    deploy version 79d2a874 (cron visible), live checks green incl. profile
+    routes; README refreshed (server-side persistence, profile, 16 cases);
+    wrangler.jsonc observability logs enabled.
 - Phase 3 server-side notes/attempts (2026-07-10, 990d551..93ab9ea, subagent-driven off
   SPEC+PLAN, all 11 tasks review-clean, browser-verified 8/8): trainee notes,
   addenda, and wrap-up attempts moved from localStorage to D1, scoped to the
@@ -34,8 +71,8 @@ feedback (cce42a4..dc9f29b).
   (`legend-user-notes-*`, `legend-addenda-*`, `legend-wrapup-*`). Browser
   click-through 8/8 PASS (pend/reload/reopen/sign/reload/clear-report/reload/
   addendum/reload/delete/reload/sign-out-new-guest-isolation/localStorage
-  audit), no console or network errors. Migration 0002 (the new tables) is
-  applied locally only; remote D1 is still on 0001 pending the T13 ship gate.
+  audit), no console or network errors. (Superseded later the same day: T13
+  shipped; remote D1 now carries 0001+0002+0003.)
 - Restored the lost Chart Review + Results work from Claude Code file-history after
   an accidental hard reset, committed (71d79a9). Recovery recipe in project memory
   ([[claude-file-history-recovery]]).
@@ -114,14 +151,25 @@ feedback (cce42a4..dc9f29b).
   the rubric, LLM for prose only; Patient Message on the same event stream. Six product
   decisions still Ryan's (sim-time model, rubric fairness, v1 content policy, graded vs
   formative, multiplayer scope column, branch count). Not specced or approved yet.
-- Session 2026-07-09/10 commit range: `8574cee..HEAD` (backend pivot: research,
-  phase 1, phase 2, handoff doc reconciliation). Nothing pushed (standing rule:
+- Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
+  ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
+  Prior range 8574cee..5d8b502 (backend pivot: research,
+  phase 1, phase 2, handoff doc reconciliation). (standing rule:
   never push without Ryan's approval).
 
 ## Next concrete step
-Phase 3 T13 SHIPPED 2026-07-10 (Ryan ran migration + deploy himself):
-- Remote migration 0002 applied (6 commands); deployed version 45ebd225 with
-  the purge cron live (`17 3 * * *` visible in deploy output).
+Phase 4: Patient Message (per-patient MDT chat, LLM personas). Not specced.
+Start with spec+plan (brainstorm with Ryan). Read FIRST: DYNAMIC_PATIENTS.md
+(six product decisions still Ryan's) and docs/PERMISSIONS_RESEARCH.md — the
+one hard prerequisite decision: the shared scope column (userId vs sessionId)
+for the assignment ACL and the case_event log, settled together BEFORE either
+table is created. The LLM proxy route needs per-user rate limiting (guests are
+the abuse vector).
+
+Phase 3 ship record (2026-07-10, fully closed):
+- Remote migrations 0002+0003 applied; final live version 79d2a874 (an earlier
+  same-day deploy was 45ebd225, pre-profile) with the purge cron live
+  (`17 3 * * *` visible in deploy output).
 - Live checks all green: /api/health {ok:true,db:true}, deep link 200,
   unauthenticated work route 401, anonymous sign-in 200, and the FULL prod
   write loop proven (POST note -> server UUID -> GET roundtrip -> DELETE 204
@@ -136,14 +184,12 @@ Phase 3 T13 SHIPPED 2026-07-10 (Ryan ran migration + deploy himself):
   serves a clean client_id (no %22). Gotcha documented in CLAUDE.md (Secrets
   bullet). Implication: phase 2's "live Google confirmed" was probably a
   localhost observation.
-- REMAINING to fully close phase 3: Ryan's Google-link click-through — as a
-  guest, pend/sign a note, then sign in with Google and confirm the note
-  re-keys onto the Google user (`rekeyUserWork`) and the old anon row is
-  gone. This also exercises the re-put GOOGLE_CLIENT_SECRET (token exchange).
-- Then: phase 4, Patient Message (per-patient MDT chat, LLM personas) — not
-  specced yet; see `DYNAMIC_PATIENTS.md` for the dynamic-patients research
-  that feeds it. Note DYNAMIC_PATIENTS.md references the deleted isOwnNote
-  user-note- backstop (stale on arrival; fix in the next docs pass).
+- Google-link click-through: DONE by Ryan (link flow clean, notes carried
+  over; this also proved the re-put GOOGLE_CLIENT_SECRET token exchange).
+  The alias-history gap he found (guest persona not listed as a previous
+  alias) was fixed in 0dd36e9. Note: the sanctioned carry-over path is
+  LINKING from the live guest session (ProfileMenu button); logout-then-
+  Google-login is two separate users by design.
 
 Historical context (phases 1-3, all now shipped/built, kept for the record):
 - Phase 1 (Worker+Hono foundation): SHIPPED 2026-07-10 (d1f43d8..d7659a5).
@@ -199,8 +245,8 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   `npm run deploy` + live checks + Google-link check, all Ryan-gated) — see
   "Next concrete step" above. Phase 3's spec/plan/build/browser-verify are
   all done; only the deploy is outstanding.
-- Verify target: `npm test` (186 tests, 24 files, node pool), `npm run
-  test:workers` (17 tests, real local D1), `npx tsc -b`, `npm run lint`
+- Verify target: `npm test` (193 tests, 25 files, node pool), `npm run
+  test:workers` (25 tests, 3 files, real local D1), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
   generated `worker-configuration.d.ts` is eslint-ignored), `npm run build`
   (emits `dist/client` + `dist/legend` since the Cloudflare vite plugin).

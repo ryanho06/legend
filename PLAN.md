@@ -1,5 +1,11 @@
 # Phase 3: Server-side notes/addenda/attempts — Implementation Plan
 
+> **EXECUTED AND SHIPPED 2026-07-10.** This plan is a historical record: all
+> tasks T1-T13 are done including the Ryan-gated ship (remote migrations 0002
+> and 0003 applied, deployed, live-verified). Checkboxes below were tracked in
+> the ledger (.superpowers/sdd/progress.md), not ticked here. Current state
+> lives in STATUS.md. Phase 4 gets a fresh PLAN.md.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 > Spec: `SPEC.md` (phase 3, approved 2026-07-10). Execution ledger: `.superpowers/sdd/progress.md`. Phase 2 plan is historical (git: PLAN.md @ HEAD~).
 

@@ -21,7 +21,12 @@ integrated; one that does not is not. `npx tsc -b` enforces every shape below.
   that pattern-matching fails, without becoming a zebra.
 - **Everything synthetic.** Invented names, no real patients or clinicians,
   MRN in the `LEG-0000NN` series (unique across the registry). Keep the
-  disclaimer sentence in report bodies where the existing case has it:
+  disclaimer sentence in report bodies where the existing case has it.
+  (Sanctioned exception: `test001` under the "TestList" specialty is a
+  non-clinical utility patient for persistence/permissions testing; it uses
+  the `LEG-T000NN` MRN range and a deliberately tiny rubric. The clinical
+  rules in this document do not apply to it, and it must never be cited as
+  a template for real cases.) Disclaimer text:
   "All patient data are synthetic. For education and simulation only. Not for
   clinical use."
 

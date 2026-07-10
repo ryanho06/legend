@@ -3,7 +3,7 @@
 > Durable design contract. Survives `/clear` and compaction. Edit this, not your memory.
 > Previous spec (phase 2, real accounts): SHIPPED 2026-07-10, lives in git history.
 
-Status: DESIGN APPROVED 2026-07-10 (Ryan approved both design sections). Plan: PLAN.md.
+Status: SHIPPED 2026-07-10 (all tasks incl. the gated T13: remote migrations 0002+0003, deployed, live-verified; plus a post-ship wave: profile/aliases, guest Google-link button, staff-ID display). Plan: PLAN.md (historical). Execution record: .superpowers/sdd/progress.md.
 Depends on: Phase 2 (better-auth accounts, everyone is a server-side user), SHIPPED 2026-07-10.
 
 ## Context (why)

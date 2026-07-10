@@ -8,7 +8,7 @@ It recreates the parts of an electronic health record you actually have to navig
 
 > All patient data are synthetic and fabricated for teaching. Legend is for education and simulation only, **not** clinical decision-making.
 
-> **Status: active work in progress.** 15 cases across 4 specialties are playable; the app is under active development and deliberately rough in places.
+> **Status: active work in progress.** 16 cases across 4 specialties are playable; the app is under active development and deliberately rough in places.
 
 ## Live demo
 
@@ -39,7 +39,7 @@ npm run dev           # SPA + API worker + local D1 in one process (http://local
 npm run build         # type-check + production build (dist/client + dist/legend)
 npm run lint          # eslint
 npm test              # vitest, node pool (pure scoring / reflow libs)
-npm run test:workers  # vitest, workerd pool (auth routes against a real local D1)
+npm run test:workers  # vitest, workerd pool (auth, notes/work, and profile routes against a real local D1)
 ```
 
 Auth in local dev needs a `.dev.vars` file at the repo root (copy `.dev.vars.example` and fill in a Google OAuth client plus a random `BETTER_AUTH_SECRET`). The guest and Google flows then work against a local D1 database; apply its schema once with `npx wrangler d1 migrations apply legend-db --local`.

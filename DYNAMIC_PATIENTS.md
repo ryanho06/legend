@@ -150,8 +150,11 @@ case_event (
    window `(minSimTime, maxSimTime)`, deterministic default.
 3. **Simulated-doctor update notes** are pre-authored SOAP progress notes released on a
    morning cadence (one per simulated day). Give them a dedicated id prefix
-   (`sim-note-`) and an `authorId` in the d0-d8 authored-staff range so `isOwnNote`'s
-   `user-note-` backstop and the delete gate never treat them as trainee-owned.
+   (`sim-note-`) and an `authorId` in the d0-d8 authored-staff range. (Phase 3
+   note: ownership is now server-side membership in the user's fetched notes
+   plus the `playerHcpId` match; the old `isOwnNote` `user-note-` backstop is
+   deleted. The d0-d8 authorId range still keeps sim notes visually distinct
+   from trainee `d9xxxxx` staff IDs.)
 4. **Microbiology results** are staged reveals of pre-authored `ClinicalMicro`
    variants. The type already models the progression natively (status
    `Preliminary` -> `Final`, `resultText` for "NO GROWTH TO DATE", `organisms` +
