@@ -14,7 +14,7 @@ It recreates the parts of an electronic health record you actually have to navig
 
 **https://legend.ryanhocn.workers.dev**
 
-No registration needed: "Start training" gives you a guest session instantly, or sign in with Google to keep your identity across devices. Notes and feedback still live in your own browser (localStorage) for now; server-side saving is the next milestone. Signing out clears your local work.
+No registration needed: "Start training" gives you a guest session instantly, or sign in with Google to keep your identity across devices. Your notes, addenda, and feedback are saved to your account server-side, so they survive sign-out and follow you between devices. Guests can link a Google account from the profile menu at any time and keep everything they have written; unlinked guest accounts are purged after 30 days of inactivity.
 
 ## How to use it, step by step
 
@@ -94,7 +94,8 @@ The live site runs on a Cloudflare Worker (static assets plus a Hono API, config
 - **Chart Review.** An encounters table with filters (inpatient / outpatient / ED / admissions); every row opens a viewable document, including structured **lab** and **microbiology** reports rendered as receipts.
 - **Notes.** A clinical-notes browser and editor with text search, multi-tab preview, SmartText templates, and letter-page rendering. Sign to publish a note attributed to you, Pend to file it incomplete, and edit or addend notes you own.
 - **Note feedback (the Performance dock).** Signing scores the note against a per-case rubric: required findings, unsafe omissions (one case hides a penicillin-allergy prescribing catch), section structure, and a conciseness band. The axes operationalise a subset of PDQI-9, the validated nine-dimension note-quality instrument (Stetson et al., 2012). The model note is revealed after scoring, not before. Pended and draft notes can be submitted for practice feedback without the overreach penalty.
-- **15 worked cases across 4 specialties** (General Surgery, Emergency Medicine, General Medicine, Geriatrics), each an atypical presentation built to reward reasoning over pattern-matching.
+- **Profile and aliases.** The user bubble opens a profile menu: see the doctor personas you have held (name, grade, staff ID), switch back to a previous alias, link a Google account as a guest, or sign out. Notes display the author's staff ID so same-name authors stay distinguishable.
+- **16 worked cases across 4 specialties** (General Surgery, Emergency Medicine, General Medicine, Geriatrics), each an atypical presentation built to reward reasoning over pattern-matching.
 - **Synthetic-only by design.** Simulation disclaimers are built into the report banners, not bolted on.
 
 ## Roadmap
@@ -104,8 +105,8 @@ The live site runs on a Cloudflare Worker (static assets plus a Hono API, config
 
 ## Tech stack
 
-React 19 + TypeScript, built with Vite. Charts via Recharts, icons via lucide-react, resizable panes via react-resizable-panels. The backend is a Cloudflare Worker: Hono serves the `/api` routes, better-auth handles accounts (guest sessions and Google sign-in) on a D1 (SQLite) database, and the same worker serves the site as static assets. Case data is typed and static; notes and feedback live in browser localStorage until server-side persistence lands. Unit tests via Vitest, in two pools: a node pool for the pure scoring and reflow libs, and a workerd pool that exercises the auth routes against a real local D1.
+React 19 + TypeScript, built with Vite. Charts via Recharts, icons via lucide-react, resizable panes via react-resizable-panels. The backend is a Cloudflare Worker: Hono serves the `/api` routes, better-auth handles accounts (guest sessions and Google sign-in) on a D1 (SQLite) database, and the same worker serves the site as static assets. Case data is typed and static; the trainee's notes, addenda, and feedback attempts are stored per account in D1 behind session-gated API routes. Unit tests via Vitest, in two pools: a node pool for the pure scoring and reflow libs, and a workerd pool that exercises the auth, notes, and profile routes against a real local D1.
 
 ## Status
 
-Active prototype. 15 cases across 4 specialties, a single stylesheet, and case content stored as typed `.ts` bundles per case (the renderers are data-driven, so a JSON or markdown case loader can be added later without touching them). Built solo with Claude Code.
+Active prototype. 16 cases across 4 specialties, a single stylesheet, and case content stored as typed `.ts` bundles per case (the renderers are data-driven, so a JSON or markdown case loader can be added later without touching them). Built solo with Claude Code.
