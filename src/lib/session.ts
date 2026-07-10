@@ -5,11 +5,12 @@ import { authClient } from "./authClient";
 export const SKIP_DELETE_CONFIRM_KEY = "legend-skip-delete-confirm";
 
 /**
- * End the better-auth session, then clear the trainee's work on every case
- * (notes, feedback attempts, sticky notes) and reload so the sign-in gate
- * shows again. Everything besides the session lives in localStorage — sweeps
- * by prefix so new per-case keys never need registering here; the one
- * deliberate survivor is the device-level delete-confirm preference.
+ * End the better-auth session, then sweep every `legend*` localStorage key
+ * (sticky notes and other client-side scratch) and reload so the sign-in
+ * gate shows again. Notes, feedback attempts, and addenda are server-side
+ * now and are untouched by this — sweeps by prefix so new per-case keys
+ * never need registering here; the one deliberate survivor is the
+ * device-level delete-confirm preference.
  */
 export async function signOut() {
   await authClient.signOut();

@@ -28,6 +28,7 @@ export default {
   fetch: app.fetch,
   scheduled: async (_controller, env) => {
     const cutoff = new Date(Date.now() - PURGE_AFTER_DAYS * 86_400_000).toISOString();
-    await purgeStaleAnonUsers(env.DB, cutoff);
+    const n = await purgeStaleAnonUsers(env.DB, cutoff);
+    console.log(`purged ${n} stale anonymous users`);
   },
 } satisfies ExportedHandler<Env>;

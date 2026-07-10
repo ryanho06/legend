@@ -202,7 +202,17 @@ export function PatientWorkspace({
         await work.createNote(buildUserNote(draft, user, text, status, new Date()));
       }
       if (status === "signed") {
-        await work.saveAttempt(text, true);
+        // The note is committed once createNote/refileNote above has resolved,
+        // so the draft tab must close and the dock must open regardless of
+        // whether the attempt write below succeeds — otherwise a retry after a
+        // failed saveAttempt would sign a duplicate note.
+        try {
+          await work.saveAttempt(text, true);
+        } catch {
+          setSaveError(
+            "Note signed and filed, but the feedback attempt didn't save. Submit it again from the Performance dock.",
+          );
+        }
         onPatch((prev) => ({
           editors: prev.editors.filter((d) => d.id !== id),
           wrapupOpen: true,
