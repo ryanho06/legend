@@ -1,6 +1,11 @@
 import { Hono } from "hono";
+import { createAuth } from "./auth";
 
 const app = new Hono<{ Bindings: Env }>().basePath("/api");
+
+app.on(["GET", "POST"], "/auth/*", (c) =>
+  createAuth(c.env, new URL(c.req.url).origin).handler(c.req.raw),
+);
 
 app.get("/health", async (c) => {
   let db = false;
