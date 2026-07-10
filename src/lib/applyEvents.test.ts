@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { ClinicalNote } from "../types";
+import type { ClinicalNote, ClinicalLab, Encounter, VitalsPoint } from "../types";
 import { getCase } from "../data/patients/index";
 import { appendAddendum } from "./userNotes";
 import { applyEvents, workToEvents } from "./applyEvents";
@@ -113,5 +113,83 @@ describe("behaviour preservation vs the old hand-merge", () => {
     const live = applyEvents(bundle, workToEvents(notes, addenda));
     expect(live.documents).toEqual(oldDocuments);
     expect(live.notes).toEqual(oldNotes);
+  });
+});
+
+describe("applyEvents sim-reveal kinds", () => {
+  const lab: ClinicalLab = {
+    kind: "lab",
+    id: "reveal-lab-1",
+    encounterId: "enc-admission",
+    title: "Repeat LFTs",
+    status: "Final",
+    specimen: "Blood",
+    collected: "17/06/2026 06:00",
+    reportedAt: "17/06/2026 07:00",
+    rows: [],
+  };
+  const encounter: Encounter = {
+    id: "reveal-enc-1",
+    type: "Ward Round",
+    date: "17/06/2026",
+    time: "08:00",
+    class: "inpatient",
+    specialty: "General Surgery",
+    deptAbbrev: "GSAMU",
+    provider: "Team, FY2",
+    description: "Day 2 review",
+    status: "Open",
+    location: "AMU",
+  };
+  const point: VitalsPoint = {
+    t: "16:00",
+    sys: 118,
+    dia: 72,
+    hr: 88,
+    resp: 16,
+    spo2: 98,
+    tempC: 37.0,
+  };
+
+  test("result.release appends the document, notes unchanged", () => {
+    const live = applyEvents(bundle, [{ kind: "result.release", document: lab }]);
+    expect(live.documents.at(-1)).toEqual(lab);
+    expect(live.notes).toEqual(bundle.notes);
+    expect(live.documents).not.toBe(bundle.documents);
+  });
+
+  test("encounter.append prepends at index 0", () => {
+    const live = applyEvents(bundle, [{ kind: "encounter.append", encounter }]);
+    expect(live.encounters[0]).toEqual(encounter);
+    expect(live.encounters.length).toBe(bundle.encounters.length + 1);
+    expect(live.encounters).not.toBe(bundle.encounters);
+  });
+
+  test("vitals.append appends a point to summary.vitalsTrend", () => {
+    const live = applyEvents(bundle, [{ kind: "vitals.append", point }]);
+    expect(live.summary.vitalsTrend.at(-1)).toEqual(point);
+    expect(live.summary).not.toBe(bundle.summary);
+    expect(bundle.summary.vitalsTrend.at(-1)).not.toEqual(point); // input untouched
+  });
+
+  test("flag.set writes into a runtime flags map without touching the input", () => {
+    const live = applyEvents(bundle, [{ kind: "flag.set", key: "ercpDone", value: true }]);
+    expect(live.flags).toEqual({ ercpDone: true });
+    expect(bundle.flags).toBeUndefined();
+  });
+
+  test("multiple kinds fold together, input bundle never mutates", () => {
+    const beforeDocs = bundle.documents.length;
+    const beforeEnc = bundle.encounters.length;
+    const live = applyEvents(bundle, [
+      { kind: "result.release", document: lab },
+      { kind: "encounter.append", encounter },
+      { kind: "vitals.append", point },
+      { kind: "flag.set", key: "n", value: 2 },
+    ]);
+    expect(live.documents.length).toBe(beforeDocs + 1);
+    expect(live.encounters.length).toBe(beforeEnc + 1);
+    expect(bundle.documents.length).toBe(beforeDocs);
+    expect(bundle.encounters.length).toBe(beforeEnc);
   });
 });

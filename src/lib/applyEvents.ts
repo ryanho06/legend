@@ -16,6 +16,9 @@ import { appendAddendum } from "./userNotes";
 export function applyEvents(bundle: CaseBundle, events: CaseEvent[]): CaseBundle {
   if (events.length === 0) return bundle;
   let documents = bundle.documents;
+  let encounters = bundle.encounters;
+  let summary = bundle.summary;
+  let flags = bundle.flags;
   for (const event of events) {
     switch (event.kind) {
       case "note.create":
@@ -28,6 +31,20 @@ export function applyEvents(bundle: CaseBundle, events: CaseEvent[]): CaseBundle
             : doc,
         );
         break;
+      case "result.release":
+        documents = [...documents, event.document];
+        break;
+      case "encounter.append":
+        // Prepend at index 0 with `group` omitted so it lands in the implicit
+        // current recency bucket (the table only emits a header when group is set).
+        encounters = [event.encounter, ...encounters];
+        break;
+      case "vitals.append":
+        summary = { ...summary, vitalsTrend: [...summary.vitalsTrend, event.point] };
+        break;
+      case "flag.set":
+        flags = { ...flags, [event.key]: event.value };
+        break;
       default: {
         const _exhaustive: never = event;
         return _exhaustive;
@@ -35,7 +52,7 @@ export function applyEvents(bundle: CaseBundle, events: CaseEvent[]): CaseBundle
     }
   }
   const notes = documents.filter((doc): doc is ClinicalNote => doc.kind === "note");
-  return { ...bundle, documents, notes };
+  return { ...bundle, documents, notes, encounters, summary, flags };
 }
 
 /**

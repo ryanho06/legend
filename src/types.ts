@@ -417,17 +417,41 @@ export type CaseBundle = {
   rubric: CaseRubric;
   summary: CaseSummary;
   bloods: BloodRow[];
+  /** Pre-authored sim-events revealed by the sim-clock (Model B). Absent = static. */
+  events?: AuthoredEvent[];
+  /** Runtime-only branching flags written by applyEvents (flag.set). Authored cases never set this. */
+  flags?: Record<string, boolean | number>;
 };
 
 /**
- * A single overlay event folded onto a CaseBundle by applyEvents. These kinds
- * cover the trainee's own work (notes + addenda); the engine plan adds
- * sim-reveal kinds (result / encounter / vitals). The fold patches `documents`
- * and recomputes `notes` from it.
+ * A single overlay event folded onto a CaseBundle by applyEvents. Trainee work
+ * (note.create / note.addendum) and authored sim-reveals (result / encounter /
+ * vitals / flag) are ONE uniform stream; the fold patches the relevant bundle
+ * field and recomputes `notes` from `documents`.
  */
 export type CaseEvent =
   | { kind: "note.create"; note: ClinicalNote }
-  | { kind: "note.addendum"; noteId: string; block: string };
+  | { kind: "note.addendum"; noteId: string; block: string }
+  | { kind: "result.release"; document: ClinicalLab | ClinicalMicro }
+  | { kind: "encounter.append"; encounter: Encounter }
+  | { kind: "vitals.append"; point: VitalsPoint }
+  | { kind: "flag.set"; key: string; value: boolean | number };
+
+/**
+ * One pre-authored sim-event in a case's events.ts (Model B reveal rail). The
+ * engine reveals it (folds `event`) once the sim-clock reaches `at`. Ordering
+ * across authored events is carried by `seq`, never derived from display strings.
+ */
+export type AuthoredEvent = {
+  /** Sim-offset in seconds from the case anchor; revealed when at <= simNow. */
+  at: number;
+  /** Total fold order across authored events; author keeps monotonic with `at`. */
+  seq: number;
+  /** Optional handle for later suppression/dedupe (unused in v1). */
+  dedupeKey?: string;
+  /** The overlay event folded when this reveals. */
+  event: CaseEvent;
+};
 
 export type RubricItemResult = {
   item: RubricItem;
