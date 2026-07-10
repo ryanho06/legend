@@ -1,6 +1,7 @@
 import { Bell, Menu, StickyNote } from "lucide-react";
-import { signOut } from "../../lib/session";
+import { useState } from "react";
 import type { CasePatient, UserProfile } from "../../types";
+import { ProfileMenu } from "./ProfileMenu";
 
 export function TopSystemBar({
   stickyOpen,
@@ -17,6 +18,7 @@ export function TopSystemBar({
   /** Drives the environment banner; absent when no chart is open. */
   activePatient?: CasePatient;
 }) {
+  const [profileOpen, setProfileOpen] = useState(false);
   const environment = activePatient
     ? `TRAINING — ${activePatient.specialty} — ${activePatient.forename} ${activePatient.surname}`
     : "TRAINING — MOUNT VERDANT HOSPITAL";
@@ -51,33 +53,30 @@ export function TopSystemBar({
         )}
 
         <Bell size={16} />
-        <button
-          className="user-bubble"
-          title={`${user.forename} ${user.surname} — Medical Student. Click to sign out and reset the demo.`}
-          onClick={() => {
-            if (
-              window.confirm(
-                "Sign out? This clears your notes and feedback so the next trainee starts fresh.",
-              )
-            ) {
-              void signOut();
-            }
-          }}
-        >
-          {user.image ? (
-            <img
-              className="user-bubble-avatar"
-              src={user.image}
-              alt=""
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <>
-              {(user.forename[0] ?? "").toUpperCase()}
-              {(user.surname[0] ?? "").toUpperCase()}
-            </>
-          )}
-        </button>
+        <div className="profile-anchor">
+          <button
+            className="user-bubble"
+            title={`${user.forename} ${user.surname} — profile and aliases`}
+            aria-haspopup="dialog"
+            aria-expanded={profileOpen}
+            onClick={() => setProfileOpen((open) => !open)}
+          >
+            {user.image ? (
+              <img
+                className="user-bubble-avatar"
+                src={user.image}
+                alt=""
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <>
+                {(user.forename[0] ?? "").toUpperCase()}
+                {(user.surname[0] ?? "").toUpperCase()}
+              </>
+            )}
+          </button>
+          {profileOpen && <ProfileMenu user={user} onClose={() => setProfileOpen(false)} />}
+        </div>
       </div>
     </header>
   );
