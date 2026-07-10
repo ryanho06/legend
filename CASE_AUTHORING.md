@@ -76,6 +76,11 @@ is a `CaseBundle`; read that type first. Key fields with non-obvious rules:
     `playerHcpId` on the case's registry entry in `src/data/patients/index.ts`.
     Notes without an `authorId` are ownable by nobody. Example: cholangitis001
     sets `playerHcpId: "d284617"` (Mensah, Daniel) and stamps his four notes.
+- **`anchor`** (optional, on the registry `CaseBundle` entry): Unix epoch
+  **seconds** for the case's "present" (the admission moment). When set,
+  trainee notes are stamped from it via `lib/simTime.ts`'s `caseNow`, and all
+  display formatting in that module renders in UTC. Only cholangitis001 sets
+  one so far; cases without an `anchor` fall back to the real wall clock.
 - **Encounters** (`Encounter[]`):
   - Array order IS the timeline display order, newest first. The recency
     `group` headers ("2 Weeks Ago") are hand-tuned per row, not computed.

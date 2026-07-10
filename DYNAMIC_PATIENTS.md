@@ -191,10 +191,15 @@ From the codebase-fit audit. These are the assumptions dynamic patients violate:
 - **Every display time is a hand-written string.** `Encounter.date/time`,
   `dateOfService`, `fileTime`, `collected/reportedAt` are all authored strings, not
   derived from epochs. Dynamic events must fabricate coherent DD/MM/YYYY strings, which
-  forces a per-case sim-clock anchor. Related pre-existing bug to fix at the same time:
-  `buildUserNote` stamps trainee notes with real wall-clock dates (today) on a chart
-  frozen at an internal date (cholangitis = 16/06/2026), so user notes already sort
-  after the chart with a visibly wrong date. Stamp sim-time instead.
+  forces a per-case sim-clock anchor. Related bug, now FIXED for the cholangitis001
+  pilot: `buildUserNote` used to stamp trainee notes with real wall-clock dates (today)
+  on a chart frozen at an internal date (cholangitis = 16/06/2026), so user notes sorted
+  after the chart with a visibly wrong date. Plan 1
+  (`docs/superpowers/plans/2026-07-10-dynamic-patients-1-time-model.md`) fixed this via
+  the optional `CaseBundle.anchor` field plus `lib/simTime.ts`'s `caseNow`, which stamps
+  from the anchor when one is authored. The other cases have no anchor yet and still
+  stamp the real wall clock; fixing them is pending the lazy fleet migration to
+  `CaseBundle.anchor`.
 - **Multiplayer scoping.** All client stores key by `caseId` alone. Shared sessions
   need `scope = sessionId`, which touches the workspace remount key, the D1 scope
   columns, and the sign-out key sweep. Design `case_event.scope` in from day one so the

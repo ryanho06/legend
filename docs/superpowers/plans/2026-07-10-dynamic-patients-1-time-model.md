@@ -12,7 +12,7 @@
 
 - Display formatting is **UTC-based** (`getUTC*`), never local `getDate()`/`getHours()`: a case authored at 16/06/2026 must render 16/06/2026 in every timezone.
 - All sim times are **Unix epoch seconds** (matching `ClinicalNote.timestamp`), never milliseconds.
-- `CaseBundle.anchor` is **optional**. Only cholangitis001 gets one in this plan. Cases without an anchor keep today's wall-clock behavior unchanged (the lazy fleet migration is out of scope).
+- `CaseBundle.anchor` is **optional**. Only cholangitis001 gets one in this plan. Cases without an anchor keep the same epoch source (`Date.now()`, unchanged), but the rendered date is now UTC like every other display in the app, not byte-identical to the old local-time display (the lazy fleet migration is out of scope).
 - `buildUserNote` and the other note builders stay **pure and React-free** (they are unit-tested in the node pool).
 - Do **not** touch `formatStamp` (the `DD/MM HH:MM` wrap-up attempt "at" stamp): it marks real submission time and is out of scope.
 - Commit messages use no em dashes (repo voice rule); use commas, parentheses, or colons.
