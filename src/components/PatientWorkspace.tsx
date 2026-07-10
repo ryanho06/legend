@@ -27,6 +27,7 @@ import {
   refileUserNote,
 } from "../lib/userNotes";
 import { applyEvents, workToEvents } from "../lib/applyEvents";
+import { revealEvents } from "../lib/reveal";
 import { caseNow } from "../lib/simTime";
 import { plainTextToEditorHtml } from "../lib/smarttext";
 import type { CaseUiState, Note, NoteStatus, UserProfile } from "../types";
@@ -71,11 +72,18 @@ export function PatientWorkspace({
     else panel.collapse();
   }
 
-  // The trainee's server work (notes + folded addenda) joins the static case
-  // content through the single applyEvents fold. documents/notes come from the
-  // folded bundle, which is also re-provided via context below so every
-  // useCase() consumer sees the same evolved chart.
-  const events = useMemo(() => workToEvents(userNotes, addenda), [userNotes, addenda]);
+  // Authored sim-events revealed by the server clock (Model B), plus the
+  // trainee's own work, fold onto the static case through one applyEvents seam.
+  // Reveals go first so trainee notes sort last (newest). With no events.ts and
+  // simNow 0 this is identical to the pre-engine merge.
+  const revealed = useMemo(
+    () => revealEvents(activeCase.events ?? [], work.simNow),
+    [activeCase.events, work.simNow],
+  );
+  const events = useMemo(
+    () => [...revealed, ...workToEvents(userNotes, addenda)],
+    [revealed, userNotes, addenda],
+  );
   const liveCase = useMemo(() => applyEvents(activeCase, events), [activeCase, events]);
   const allDocuments = liveCase.documents;
   const allNotes = liveCase.notes;

@@ -6,7 +6,9 @@ import {
   apiDeleteAttempt,
   apiDeleteNote,
   apiPutAttempt,
+  apiPutSession,
   apiRefileNote,
+  fetchCaseSession,
   fetchCaseWork,
   type AddendumRow,
   type StoredAttempt,
@@ -20,12 +22,14 @@ export type CaseWorkState = {
   notes: ClinicalNote[];
   addenda: Record<string, string>;
   attempt: StoredAttempt | null;
+  simNow: number;
   createNote(note: ClinicalNote): Promise<ClinicalNote>;
   refileNote(note: ClinicalNote): Promise<void>;
   deleteNote(id: string): Promise<void>;
   addAddendum(noteId: string, block: string): Promise<void>;
   saveAttempt(text: string, signed: boolean): Promise<void>;
   clearAttempt(): Promise<void>;
+  advanceSim(target: number): Promise<void>;
 };
 
 /**
@@ -40,15 +44,17 @@ export function useCaseWork(caseId: string): CaseWorkState {
   const [attempt, setAttempt] = useState<StoredAttempt | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [simNow, setSimNow] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetchCaseWork(caseId).then(
-      (work) => {
+    Promise.all([fetchCaseWork(caseId), fetchCaseSession(caseId)]).then(
+      ([work, session]) => {
         if (cancelled) return;
         setNotes(work.notes);
         setAddendaRows(work.addenda);
         setAttempt(work.attempt);
+        setSimNow(session.simNow);
         setLoaded(true);
       },
       (err: unknown) => {
@@ -74,6 +80,7 @@ export function useCaseWork(caseId: string): CaseWorkState {
     notes,
     addenda,
     attempt,
+    simNow,
     async createNote(note) {
       const stored = await apiCreateNote(caseId, note);
       setNotes((prev) => [...prev, stored]);
@@ -99,6 +106,12 @@ export function useCaseWork(caseId: string): CaseWorkState {
     async clearAttempt() {
       await apiDeleteAttempt(caseId);
       setAttempt(null);
+    },
+    async advanceSim(target) {
+      const next = Math.max(simNow, Math.floor(target));
+      if (next === simNow) return;
+      const res = await apiPutSession(caseId, next);
+      setSimNow(res.simNow);
     },
   };
 }

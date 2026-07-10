@@ -59,6 +59,16 @@ export const apiPutAttempt = (caseId: string, attempt: StoredAttempt) =>
 export const apiDeleteAttempt = (caseId: string) =>
   request<void>(`/cases/${caseId}/attempt`, { method: "DELETE" });
 
+export type CaseSession = { simNow: number };
+
+export const fetchCaseSession = (caseId: string) => request<CaseSession>(`/cases/${caseId}/session`);
+
+export const apiPutSession = (caseId: string, simNow: number) =>
+  request<CaseSession>(`/cases/${caseId}/session`, {
+    method: "PUT",
+    body: JSON.stringify({ simNow }),
+  });
+
 /** A persona (forename/surname/grade/hcpId) the trainee has held. */
 export type Alias = {
   id: string;
