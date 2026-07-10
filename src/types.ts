@@ -402,6 +402,13 @@ export type CaseBundle = {
   handoff: string;
   /** Doctor ID of the simulated persona the trainee plays in this case, if any. */
   playerHcpId?: string;
+  /**
+   * The case's "present" datetime as Unix epoch SECONDS: the admission moment the
+   * trainee documents against. Trainee notes are stamped from this (see caseNow),
+   * so they sort after the authored chart with a coherent same-day date. Optional:
+   * legacy cases without it fall back to the real wall clock.
+   */
+  anchor?: number;
   patient: CasePatient;
   documents: ClinicalDocument[];
   /** kind:"note" subset of documents (static pre-authored notes). */

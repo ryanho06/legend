@@ -144,6 +144,9 @@ export const caseRegistry: CaseBundle[] = [
     handoff:
       "64F, epigastric pain + rigors + new jaundice. ?Acute cholangitis (TG18 II), for urgent ERCP.",
     playerHcpId: "d284617",
+    // 16/06/2026 17:00 UTC: just after the day's latest charted note (16/06/26 1650),
+    // so a signed trainee note sorts newest with a coherent same-day date.
+    anchor: Date.UTC(2026, 5, 16, 17, 0) / 1000,
     patient: cholangitis001Patient,
     documents: caseCholangitis001Documents,
     notes: caseCholangitis001Notes,
