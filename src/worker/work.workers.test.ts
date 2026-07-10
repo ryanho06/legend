@@ -179,6 +179,16 @@ describe("addenda and attempts", () => {
     expect(data.addenda[0].noteId).toBe("note-adm-1");
   });
 
+  test("rejects an addendum with an empty caseId", async () => {
+    const cookie = await anonCookie();
+    const res = await callWorker("/api/notes/note-adm-1/addenda", {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: JSON.stringify({ caseId: "", body: "x" }),
+    });
+    expect(res.status).toBe(400);
+  });
+
   test("attempt upserts and clears", async () => {
     const cookie = await anonCookie();
     const put = (text: string) =>

@@ -91,7 +91,7 @@ work.delete("/notes/:id", async (c) => {
 
 work.post("/notes/:id/addenda", async (c) => {
   const raw = (await c.req.json().catch(() => null)) as { caseId?: unknown; body?: unknown } | null;
-  if (!raw || typeof raw.caseId !== "string" || typeof raw.body !== "string" || raw.body.length === 0)
+  if (!raw || typeof raw.caseId !== "string" || raw.caseId.length === 0 || typeof raw.body !== "string" || raw.body.length === 0)
     return c.json({ error: "bad request" }, 400);
   const row = {
     id: crypto.randomUUID(),
