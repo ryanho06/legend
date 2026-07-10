@@ -2,12 +2,21 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-10 (Dynamic Patients Plans 1-2 shipped locally; paused before Plan 3)
+Last updated: 2026-07-10 (Dynamic Patients Plan 3, server engine, shipped locally; full
+suite green; Plan 4 next)
 Branch / worktree: main (this session NOT pushed, per standing rule)
-Latest session (8582e98..b63b37b, 11 commits): Dynamic Patients v1 started — SPEC approved
-+ committed (engine = Model B: server clock + client reveal, `case_event` deferred), Plans
-1 (time model) + 2 (applyEvents fold refactor) built subagent-driven, review-clean, and
-browser-verified on cholangitis001. NOT pushed. See Done + In flight.
+Latest session (e26d448..4454aa2, 9 commits): Dynamic Patients Plan 3 (server engine,
+Model B) built subagent-driven off a written plan: migration 0004 `case_session`, the
+`/api/cases/:caseId/session` clock router, the rekey line, extended `applyEvents` +
+`AuthoredEvent`, the pure `revealEvents` filter, and the client wiring (`useCaseWork`
+simNow/advanceSim, `PatientWorkspace` reveal composition). Full suite green: tsc clean,
+219 node-pool tests (29 files), 33 workers-pool tests (4 files), lint clean, build emits
+dist/client + dist/legend. Ships INERT: no case authors `events.ts` yet (that is Plan 4).
+NOT pushed. See Done + In flight.
+--- PRIOR session (8582e98..b63b37b, 11 commits): Dynamic Patients v1 started: SPEC
+approved + committed (engine = Model B: server clock + client reveal, `case_event`
+deferred), Plans 1 (time model) + 2 (applyEvents fold refactor) built subagent-driven,
+review-clean, and browser-verified on cholangitis001.
 --- PRIOR session (5d8b502..8582e98, 31 commits incl. 2 from a parallel session):
 Phase 3 SHIPPED end-to-end (built, reviewed, browser-verified, deployed with
 remote migrations 0002+0003; live write loop proven in prod), PLUS a post-ship
@@ -27,6 +36,26 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
+- Dynamic Patients Plan 3, server engine (Model B) (2026-07-10, 6526b88..4454aa2, 9
+  commits, subagent-driven off a written plan): migration 0004 adds
+  `case_session(scope, caseId, simNow, updatedAt)` (PK(scope,caseId), FK
+  scope->user(id) cascade); `src/worker/session.ts` is the session-gated clock router
+  (`GET`/`PUT /api/cases/:caseId/session`, lazy-create at simNow=0 with a race-free
+  re-read, last-write-wins PUT); `rekey.ts` re-keys `case_session` on account link
+  (`UPDATE OR REPLACE ... SET scope`); `CaseEvent` grew four sim-reveal kinds
+  (`result.release` / `encounter.append` / `vitals.append` / `flag.set`) plus
+  `AuthoredEvent` (`{ at, seq, dedupeKey?, event }`), and `applyEvents` now also patches
+  `encounters`, `summary.vitalsTrend`, and `flags`; `src/lib/reveal.ts`
+  (`revealEvents(authored, simNow)`) is the pure client reveal filter; `useCaseWork`
+  exposes `simNow`/`advanceSim` (forward-only, last-write-wins) and `PatientWorkspace`
+  composes the authored reveal into the `applyEvents` fold. Ships INERT: no case
+  authors `events.ts` yet (that is Plan 4). Full suite green (tsc, 219 node-pool
+  tests/29 files, 33 workers-pool tests/4 files, lint, build). Caveat found during
+  grounding (Flag 1): cholangitis001's static note `timestamp` epochs sit 24h behind
+  its `anchor` (notes filed 15/06, anchor 16/06 17:00 UTC); the engine itself is
+  unaffected (it compares `at`/`simNow` offsets, never static epochs), but Plan 4 must
+  measure `events.ts` `at` offsets from the anchor deliberately. Outstanding ship gate
+  (Ryan-gated, NOT done this plan): remote migration 0004 + `npm run deploy`.
 - Post-ship wave (2026-07-10, after the phase-3 ship, ..c00f70b + docs):
   - Profile/aliases (opus agent, worktree, merged f083a58): user bubble opens
     `ProfileMenu` (persona, previous aliases, Switch, Sign out inside);
@@ -159,7 +188,12 @@ feedback (cce42a4..dc9f29b).
   sim-time) DONE (b604247..1e525a0). **Plan 2** (fold refactor: `lib/applyEvents.ts` +
   `CaseEvent` + `workToEvents`, PatientWorkspace folds via a NESTED `CaseContext.Provider`,
   hand-merge deleted) DONE (18b3d82..45a7e7d). Both browser-verified on cholangitis001.
-  Plans 3-4 not written. NEXT: Plan 3 (server engine, Model B) — see Next concrete step.
+  **Plan 3** (server engine: `case_session` migration + clock router + rekey line +
+  sim-reveal `CaseEvent` kinds + `AuthoredEvent` + `revealEvents` + client wiring) DONE
+  (6526b88..4454aa2), full suite green; see the Done entry above for detail and the
+  Flag-1 caveat. Ships INERT (no case authors `events.ts` yet, so there is no new
+  product-visible surface to browser-verify). Plan 4 not written. NEXT: Plan 4 (product
+  loop); see Next concrete step.
 - Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
   ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
   Prior range 8574cee..5d8b502 (backend pivot: research,
@@ -167,21 +201,27 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-Write + execute **Dynamic Patients Plan 3** (server engine, Model B). Read FIRST:
-`DYNAMIC_PATIENTS_SPEC.md` §5 (esp. 5.1 the ONE table `case_session`, and 5.4 the
-clock+reveal rails) and §15 decisions. Scope: migration 0004 (`case_session(scope,
-caseId, simNow, updatedAt)`, PK(scope,caseId), FK scope->user(id) cascade); a session
-router (GET/PUT `/api/cases/:caseId/session`, cloning `work.ts`'s session middleware);
-ONE rekey UPDATE line in `rekey.ts` (`update or replace case_session set scope`); extend
-`CaseEvent` + `applyEvents` with sim-reveal kinds (result.release / encounter.append /
-vitals.append / flag.set) + a `seq` ordering key; a pure client reveal filter over a
-case's `events.ts` by `simNow`; wire `useCaseWork` to the /session clock. Grounding
-already read this session: work.ts, index.ts, migration 0002/0003, rekey.ts. Then Plan 4
-= product loop (chronos, NPC team, contribution tracker, cholangitis001 `events.ts`
-authoring incl. the missing micro Final reveal, CI timeline walker). Patient Message
-(old "phase 4", per-patient MDT chat, LLM personas; see the Patient Message scope bullet
-below and docs/PERMISSIONS_RESEARCH.md) comes AFTER dynamic patients and rides the
-deferred `case_event` log; its LLM proxy route needs per-user rate limiting.
+Write + execute **Dynamic Patients Plan 4** (product loop, on top of the Plan 3 engine).
+Read FIRST: `DYNAMIC_PATIENTS_SPEC.md` §8 (chronos), §9 (NPC auto-progression), §10
+(rubric fairness + leak safety), §11 (the `events.ts` authoring surface). Scope:
+`cholangitis001` `events.ts` authoring (incl. the micro Final result reveal, NPC round
+notes, a vitals trend, and chronos-driven intents); wire sign to call `advanceSim` plus
+the chronos matcher itself; a rubric-fairness cursor on the attempt (score only against
+what has actually been revealed); NPC suppression by `encounterId`; a contribution
+tracker; an extended leak-guard covering every reachable sim-state, not just simNow=0;
+a CI timeline walker that replays a case's `events.ts` end to end.
+
+**Plan 4 authoring caveat (from grounding Flag 1):** cholangitis001's static note
+`timestamp` epochs sit 24h behind its `anchor` (notes filed 15/06, anchor 16/06 17:00
+UTC). The engine itself is unaffected: it compares `at`/`simNow` offsets, never static
+epochs. But when authoring `events.ts` `at` offsets and reasoning about "N hours since
+admission," decide deliberately whether the anchor or the static epochs are canonical,
+and keep every reveal `at` offset measured from the anchor, not from the static notes.
+
+Patient Message (old "phase 4", per-patient MDT chat, LLM personas; see the Patient
+Message scope bullet below and docs/PERMISSIONS_RESEARCH.md) comes AFTER dynamic
+patients and rides the deferred `case_event` log; its LLM proxy route needs per-user
+rate limiting.
 
 Phase 3 ship record (2026-07-10, fully closed):
 - Remote migrations 0002+0003 applied; final live version 79d2a874 (an earlier
@@ -258,18 +298,21 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   with a resume note in the backlog.
 
 ## Notes for next session
-- NEXT CONCRETE STEP: Task 13 ship gate for phase 3 (remote D1 migration +
-  `npm run deploy` + live checks + Google-link check, all Ryan-gated) — see
-  "Next concrete step" above. Phase 3's spec/plan/build/browser-verify are
-  all done; only the deploy is outstanding.
-- Verify target: `npm test` (209 tests, 28 files, node pool — verified green this
-  session), `npm run test:workers` (25 tests, 3 files, real local D1 — NOT re-run this
-  session, unchanged), `npx tsc -b`, `npm run lint`
+- The CURRENT next concrete step is Dynamic Patients Plan 4 (see "Next concrete step"
+  above). An older version of this bullet pointed at phase 3's ship gate; phase 3
+  shipped long ago (see the Phase 3 ship record below and the Done section).
+- Verify target: `npm test` (219 tests, 29 files, node pool, verified green this
+  session), `npm run test:workers` (33 tests, 4 files, real local D1, verified green
+  this session), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
   generated `worker-configuration.d.ts` is eslint-ignored), `npm run build`
   (emits `dist/client` + `dist/legend` since the Cloudflare vite plugin).
 - Deploy is `npm run deploy` ONLY; remote D1 migrations
   (`npx wrangler d1 migrations apply legend-db --remote`) always gated on Ryan.
+- Dynamic Patients Plan 3 ship gate outstanding (Ryan-gated, NOT done this plan): remote
+  migration 0004 (`npx wrangler d1 migrations apply legend-db --remote`) + `npm run
+  deploy`. The engine only exists in local D1 + the unshipped worker build until this
+  runs; it ships INERT either way (no case authors `events.ts` yet).
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
 - Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
   reload or they're lost. Signed/pended user notes persist server-side in D1

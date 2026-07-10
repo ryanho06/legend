@@ -156,6 +156,30 @@ Add one entry to `src/data/patients/index.ts`:
   "64F, epigastric pain + rigors + new jaundice. ?Acute cholangitis (TG18 II),
   for urgent ERCP."
 
+## Dynamic events (optional, `events.ts`)
+
+A case may opt into runtime reveals on top of its static chart: a result appearing later,
+an encounter row being added, a vitals trend advancing, a branching flag flipping. This is
+optional and additive: a case with no `events.ts` behaves exactly as it does today (the
+reveal filter over an empty list is a no-op).
+
+- Export `events: AuthoredEvent[]` from `<caseId>/events.ts` (type in `src/types.ts`).
+  Each entry is `{ at, seq, dedupeKey?, event }`:
+  - `at`: a sim-offset in **seconds** from the case's `anchor`, not a wall-clock time and
+    not a static document `timestamp`. The engine compares `at` against the per-case
+    `simNow` clock, never a display string.
+  - `seq`: total fold order across the case's authored events; keep it monotonic with `at`.
+  - `dedupeKey` (optional): a handle for later suppression/dedupe.
+  - `event`: a `CaseEvent` reveal, one of `note.create` / `note.addendum` /
+    `result.release` / `encounter.append` / `vitals.append` / `flag.set`.
+- A case needs an `anchor` (see above) for its `events.ts` `at` offsets to have a fixed
+  origin; don't author `events.ts` against a case with no `anchor`.
+- Opt in by importing `events.ts` in `src/data/patients/index.ts` and setting `events:`
+  on the case's registry entry.
+- The full worked example (cholangitis001: a micro Final result reveal, NPC round notes,
+  a vitals trend, and chronos-driven intents) lands in Plan 4. No case authors `events.ts`
+  yet.
+
 ## Acceptance checklist
 
 Run all of these; every one must pass before the case is done.
