@@ -119,21 +119,31 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-Ship phase 3 (Task 13, Ryan-gated — none of this runs without his explicit go):
-- Remote D1 migration: `npx wrangler d1 migrations apply legend-db --remote`.
-  Applies `migrations/0002_user_work.sql` (user_note, note_addendum,
-  wrapup_attempt tables); prod `legend-db` is still on 0001 only, so the work
-  router has no tables to write to in prod until this runs.
-- `npm run deploy` (build + wrangler deploy). A bare `wrangler deploy` ships
-  the worker with no assets and takes the live SPA down — never run it alone.
-- Live checks after deploy: `/api/health` `{ok:true,db:true}`, `/api/auth/ok`,
-  SPA root + a deep link both 200.
-- Google-link check: as a guest, pend/sign a note, then link a Google account
-  and confirm the note/attempt re-key onto the Google user (`rekeyUserWork`,
-  `src/worker/rekey.ts`) and the old anonymous row is gone.
-- After T13 ships, phase 3 is fully closed. Next on the roadmap: phase 4,
-  Patient Message (per-patient MDT chat, LLM personas) — not specced yet; see
-  `DYNAMIC_PATIENTS.md` for the dynamic-patients research that feeds it.
+Phase 3 T13 SHIPPED 2026-07-10 (Ryan ran migration + deploy himself):
+- Remote migration 0002 applied (6 commands); deployed version 45ebd225 with
+  the purge cron live (`17 3 * * *` visible in deploy output).
+- Live checks all green: /api/health {ok:true,db:true}, deep link 200,
+  unauthenticated work route 401, anonymous sign-in 200, and the FULL prod
+  write loop proven (POST note -> server UUID -> GET roundtrip -> DELETE 204
+  -> empty).
+- INCIDENT, found + fixed during ship: live Google OAuth failed with
+  `Error 401: invalid_client`. Root cause: the prod GOOGLE_CLIENT_ID /
+  GOOGLE_CLIENT_SECRET secret values carried literal wrapping double quotes
+  (quoted values in `.dev.vars`-style source; dotenv strips quotes locally,
+  `wrangler secret put` stores them literally — so localhost worked, prod
+  sent `"865...com"` to Google). Fix: quotes stripped in `.dev.vars`, Ryan
+  re-put both Google secrets from the clean values; live authorize URL now
+  serves a clean client_id (no %22). Gotcha documented in CLAUDE.md (Secrets
+  bullet). Implication: phase 2's "live Google confirmed" was probably a
+  localhost observation.
+- REMAINING to fully close phase 3: Ryan's Google-link click-through — as a
+  guest, pend/sign a note, then sign in with Google and confirm the note
+  re-keys onto the Google user (`rekeyUserWork`) and the old anon row is
+  gone. This also exercises the re-put GOOGLE_CLIENT_SECRET (token exchange).
+- Then: phase 4, Patient Message (per-patient MDT chat, LLM personas) — not
+  specced yet; see `DYNAMIC_PATIENTS.md` for the dynamic-patients research
+  that feeds it. Note DYNAMIC_PATIENTS.md references the deleted isOwnNote
+  user-note- backstop (stale on arrival; fix in the next docs pass).
 
 Historical context (phases 1-3, all now shipped/built, kept for the record):
 - Phase 1 (Worker+Hono foundation): SHIPPED 2026-07-10 (d1f43d8..d7659a5).
