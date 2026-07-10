@@ -1,115 +1,119 @@
-# Spec: Multi-case foundation (registry + patient switching)
+# SPEC: Phase 2 — Real user accounts (better-auth + Google + anonymous guests)
 
-Status: DONE (2026-07-06). All three phases shipped and browser-verified
-(registry refactor 8d694ea, patient switching dec89c0, CASE_AUTHORING.md with
-this commit). Previous spec (note feedback loop): DONE; its design record lives
-in git history (SPEC.md @ 8fff625) and its decisions are folded into CLAUDE.md.
+> Durable design contract. Survives `/clear` and compaction. Edit this, not your memory.
+> Previous spec (multi-case foundation): DONE 2026-07-06, lives in git history (SPEC.md @ 0d48f4e).
 
-## Goal
+Status: DESIGN APPROVED by Ryan 2026-07-10 (three forks resolved in-session).
+Depends on: Phase 1 (Hono /api worker + D1 legend-db + Cloudflare vite plugin), SHIPPED 2026-07-10.
 
-Turn the single hardwired case into a case *platform*: a typed registry of case
-bundles, an Epic-style patient list grouped by specialty, and closable patient tabs.
-After this, adding a case = dropping a folder under `src/data/patients/<caseId>/`
-plus one registry line (which is exactly what Cowork-generated cases need), documented
-in CASE_AUTHORING.md.
+## Context (why)
 
-## Decisions (locked)
+Legend's sign-in is a demo gate: a name + Hierarchy form that writes a `UserProfile`
+to localStorage. Nothing survives a device switch, and the upcoming phases need a real
+user: phase 3 persists notes/attempts server-side per user, phase 4 (Patient Message +
+LLM proxy) needs authenticated, per-user rate-limited API access — including for
+guests, who are the abuse vector on a public LLM endpoint. Phase 2 makes every visitor
+a server-side user (anonymous or Google) with a session cookie, while changing the
+trainee-visible experience as little as possible.
 
-- **Group the patient list by specialty, not discharge location.** Students pick
-  cases by rotation/topic; unit lists are bed-management noise in a sim. Epic itself
-  has service-dept lists, so the chrome stays authentic. cholangitis001 files under
-  General Surgery (its admitting service).
-- **No stub patients.** Only real, openable cases appear in the list (today: one).
-  The specialty rail renders with one list; Cowork cases fill it in.
-- **Closing the last patient tab auto-opens the patient list** (full-screen
-  activity, like Epic's Patient Lists). No dead empty-workspace state.
-- **Opening a patient lands on Notes** (demo call-to-action), same as today's
-  landing tab. Switching back to an already-open patient preserves that patient's
-  workspace state (tab, chart sub-tab, selected document, open drafts).
-- **Patient tabs mirror the note-preview tabs' behavior**: equal-width shrink as
-  tabs multiply, freeze-on-close so the tab under the cursor stays put. Sit in a
-  strip below TopSystemBar (see references/EMR/epic_chartreviewpage.png).
-- **The hamburger button (TopSystemBar, currently a placeholder) opens the patient
-  list** as the same full-screen activity.
-- **Drafts and feedback are case-scoped.** A draft written on one patient must
-  never render on another. Sign-out clears every `legend-*` localStorage key, not
-  just one case's.
+## Decisions (resolved forks — do not re-litigate)
 
-## Data model
+1. **Sign-in UX: guest-first + Google button.** The current LegendCare card (first
+   name, last name, Hierarchy, "Start training") stays as the primary path and becomes
+   the guest flow — it silently creates an anonymous server user. A "Sign in with
+   Google" button sits below it for durable cross-device accounts.
+2. **Persona: form once, saved to the account.** First Google sign-in returns to the
+   card in persona mode (name prefilled from Google, editable; grade picked); saved
+   server-side with a server-generated `hcpId`. Returning Google users skip the form
+   entirely. (Persona name change after creation: later, out of scope.)
+3. **Sign-out: keep the full localStorage wipe for everyone** (guests and Google),
+   plus ending the server session. Temporary until phase 3 moves work server-side.
 
-`src/types.ts` additions (shapes finalized against the moved data, not invented):
+## Architecture
 
-```ts
-export type CasePatient = { /* current patient.json shape */ };
+- **Everyone is a server-side user** (Approach A). better-auth >= 1.5 mounted on the
+  existing Hono app at `/api/auth/*`, `database: env.DB` (native D1, no ORM),
+  plugins: `anonymous()` (with `onLinkAccount` wired but data migration deferred to
+  phase 3's import), Google as the ONLY social provider. No email/password ever
+  (workerd can't hash passwords acceptably). No `cookieCache`, no KV secondary
+  storage (open logout bug, Feb 2026).
+- **Sessions:** httpOnly same-origin cookies (better-auth default). No tokens in JS.
+- **Data model:** better-auth's generated tables (user, session, account,
+  verification) via its CLI schema generation, applied with
+  `wrangler d1 migrations create/apply` (`--local` for dev, `--remote` for prod) —
+  this begins the repo's migrations story (`migrations/` dir). The `user` table
+  carries four additional fields (better-auth `additionalFields`): `forename`,
+  `surname`, `grade`, `hcpId`. `hcpId` is generated server-side on persona save,
+  same d9###### format as today's `generateHcpId()`.
+- **Client:** better-auth React client (`createAuthClient`). `App.tsx`'s gate
+  switches from the localStorage `legend-user` key to the session (`useSession`).
+  The in-app `UserProfile` shape (`forename/surname/hcpId/grade`) is now DERIVED
+  from the session user — downstream code (`userNotes.ts` authorship, `isOwnNote`,
+  overreach, WrapUp) does not change.
+- **Secrets/config:** `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+  — prod via `wrangler secret put`, dev via gitignored `.dev.vars`. OAuth client
+  origins/redirects registered for `http://localhost:5173` and
+  `https://legend.ryanhocn.workers.dev` (callback path `/api/auth/callback/google`).
 
-export type CaseBundle = {
-  id: string;                    // folder name, e.g. "cholangitis001"
-  specialty: string;             // patient-list grouping, e.g. "General Surgery"
-  /** One-line handoff summary shown in the patient list row. */
-  handoff: string;
-  patient: CasePatient;
-  documents: ClinicalDocument[];
-  notes: ClinicalNote[];         // kind:"note" subset (existing convention)
-  encounters: Encounter[];
-  rubric: CaseRubric;
-  summary: SummaryData;          // current data/summary.ts shape
-  bloods: BloodsData;            // current data/chart.ts shape
-};
-```
+## Flows
 
-Registry: `src/data/patients/index.ts` exports `caseRegistry: CaseBundle[]` and a
-`getCase(id)` helper. Case content that today lives in shared files but is really
-cholangitis content moves INTO the folder: `patient.json`, `summary.ts`, `chart.ts`
-bloods. The shared files' *types* stay shared.
+- **Guest:** fill name + grade -> anonymous sign-in -> persona fields saved onto the
+  anonymous user -> app. Indistinguishable from today to the trainee.
+- **First Google sign-in:** Google button -> OAuth redirect -> back on the card in
+  persona mode (name prefilled, editable; grade) -> save -> app.
+- **Returning Google user:** lands straight in the app (session cookie or fresh
+  Google sign-in), no form.
+- **Sign-out (user bubble):** end server session + sweep `legend*` localStorage keys
+  (except the device-level delete-confirm preference) + reload, as today.
 
-Active-case delivery: a `CaseContext` (React context) provides the active
-`CaseBundle` to the components that today import case data statically
-(PatientSidebar, ReportBanner, SummaryModule, ResultsModule, WrapUp*). Everything
-already receiving props keeps receiving props.
+## Scope
 
-## App state (multi-case)
+- In scope: better-auth server setup on the phase-1 worker; D1 migrations for auth
+  tables + persona fields; SignInPage rework (guest path, Google button, persona
+  mode); App gate on session instead of localStorage profile; sign-out integration;
+  eslint globals override for `src/worker/**` (phase-1 carry-over); real-D1 test
+  project via `@cloudflare/vitest-pool-workers` (phase-1 carry-over).
+- Out of scope: server persistence of notes/attempts and localStorage import
+  (phase 3); Patient Message + LLM proxy (phase 4); persona name change UI (later);
+  email/password (never); guest-work data migration on account upgrade (phase 3);
+  in-app "upgrade guest to Google" button (phase 2 reaches Google sign-in from the
+  sign-in card only — a signed-in guest upgrades by signing out first; the
+  `onLinkAccount` hook exists for phase 3, nothing calls it yet).
+- Non-goals: multi-provider auth, roles/orgs, Workers Paid tier.
 
-- `openCaseIds: string[]` + `activeCaseId: string | null` (null -> patient list).
-- Per-case workspace state (mainTab, chartTab, selectedDocId) and per-case draft
-  editors live in maps keyed by caseId at App level, so in-memory drafts survive
-  tab switches. User notes already persist per case (`userNotesKey(caseId)`).
-- `signOut()` drops the caseId parameter and clears all `legend-*` keys.
-- TopSystemBar environment text derives from the active case instead of the
-  hardcoded "REHAB / ORTHO / GENERAL SURGERY — AMELIA HART" string.
+## Constraints
 
-## UI
+- The SPA's downstream contract is frozen: `UserProfile` keeps its shape; note
+  authorship, ownership (`hcpId`/`playerHcpId`), grades, and overreach logic are
+  untouched.
+- Free tier: no scrypt/password paths; Google + anonymous only.
+- Dev/prod parity via the phase-1 vite plugin (auth cookies must work under
+  `npm run dev` on localhost:5173 and in prod).
+- Deploy remains `npm run deploy` only. Remote migrations are a deliberate,
+  Ryan-gated step (`wrangler d1 migrations apply legend-db --remote`).
+- All patient data remain synthetic; Google gives us identity, not patient data.
+  Preserve the training-environment disclaimers on the sign-in card.
 
-1. **PatientTabBar** (`components/layout/`): strip below TopSystemBar. One tab per
-   open case: "SURNAME, Forename" + close X. Active tab highlighted; click focuses.
-2. **PatientListPage** (`components/panels/` or own folder): full-screen activity.
-   Left rail: "My Lists" grouped by specialty (one entry per specialty present in
-   the registry, with counts). Main table: Bed | Patient Name | MRN | Handoff
-   summary | Service. Single click opens the case (adds tab, focuses, lands on
-   Notes). Keep the Epic-yellow selected-row look; bottom preview pane is out of
-   scope for v1.
-3. Preserve all disclaimers. One stylesheet (App.css), no CSS modules.
+## Tasks (indicative — PLAN.md is authoritative once written)
 
-## Build order
+- [ ] Server: better-auth config + Hono mount + secrets plumbing -> verify by auth
+      endpoints answering locally (session create/read) with real local D1.
+- [ ] Schema: generate better-auth schema, create + apply local migrations (auth
+      tables + persona additionalFields) -> verify by `wrangler d1 migrations list`
+      + a real-D1 route test.
+- [ ] Client: auth client + App gate on session -> verify by guest flow end-to-end
+      in dev (anonymous user row exists, app opens, notes attribute correctly).
+- [ ] SignInPage: Google button + persona mode -> verify by first/returning Google
+      flows in dev.
+- [ ] Sign-out: server session end + existing sweep -> verify by cookie gone + row
+      session revoked + localStorage swept.
+- [ ] Carry-overs: eslint worker globals override; vitest-pool-workers project.
+- [ ] Gated: remote migrations + `npm run deploy` + live verification of all three
+      flows on legend.ryanhocn.workers.dev.
 
-1. **Phase 1 — registry refactor (no visible change).** Move case content into the
-   folder, add CaseBundle/registry/CaseContext, thread the active case (still
-   always cholangitis001). Verify: `tsc -b`, tests, lint, and the app pixel-equal
-   in the browser.
-2. **Phase 2 — patient switching UI.** PatientTabBar, PatientListPage, hamburger
-   wiring, auto-open-on-last-close, per-case state maps, all-keys sign-out.
-   Verify in browser: open/close/reopen, drafts stay case-scoped, dock scores the
-   right case.
-3. **Phase 3 — CASE_AUTHORING.md.** The Cowork-facing spec: folder layout, type
-   contracts, encounterId linking, timestamp/date conventions, rubric + model-note
-   authoring rules, disclaimers, registry hookup, and the verification commands a
-   generated case must pass.
+## Open questions
 
-Each phase lands with `tsc -b` + `npm test` + `npm run lint` green before the next.
-
-## Constraints (carried)
-
-- `MainTab`/`ChartTab` stay in sync with `tabs.ts`.
-- Times: epoch-second `timestamp` on note-kind docs; DD/MM/YYYY display dates.
-- Don't fork the static document store; localStorage user notes stay the only
-  runtime store.
-- Lint carries ONE pre-existing StickyNotePopup error; do not drive-by fix.
+- None blocking. Exact better-auth API shapes (CLI schema output for D1, anonymous
+  plugin call signatures, React client hooks, Workers `nodejs_compat` specifics on
+  the installed version) to be pinned by research during PLAN.md writing — the plan
+  must cite current docs, not memory.
