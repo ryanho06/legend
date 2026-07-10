@@ -125,7 +125,10 @@ export function NotePreview({
               <div className="note-preview-author">
                 {formatClinician(note.author, note.credential)}
               </div>
-              <div className="note-preview-role">{note.authorRole}</div>
+              <div className="note-preview-role">
+                {note.authorRole}
+                {note.authorId ? ` · ${note.authorId}` : ""}
+              </div>
               <div className="note-preview-service">{note.service}</div>
             </div>
             <div className="note-preview-head-right">
@@ -155,6 +158,7 @@ export function NotePreview({
               Report electronically signed by:
               <br />
               {formatClinician(note.author, note.credential)}
+              {note.authorId ? ` (${note.authorId})` : ""}
               <br />
               {note.service}
             </div>

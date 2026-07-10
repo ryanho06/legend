@@ -48,7 +48,10 @@ export function NoteList({
               <span className="note-row-author">
                 {formatClinician(note.author, note.credential)}
               </span>
-              <div className="note-row-role">{note.authorRole}</div>
+              <div className="note-row-role">
+                {note.authorRole}
+                {note.authorId ? ` · ${note.authorId}` : ""}
+              </div>
               <div className="note-row-dept">{note.service}</div>
               {note.status !== "signed" && (
                 <span className={`note-status-badge ${note.status}`}>
