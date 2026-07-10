@@ -22,6 +22,9 @@ export async function rekeyUserWork(
     db
       .prepare(`UPDATE OR REPLACE wrapup_attempt SET userId = ?2 WHERE userId = ?1`)
       .bind(fromUserId, toUserId),
+    db
+      .prepare(`UPDATE OR REPLACE case_session SET scope = ?2 WHERE scope = ?1`)
+      .bind(fromUserId, toUserId),
     db.prepare(`UPDATE user_alias SET userId = ?2 WHERE userId = ?1`).bind(fromUserId, toUserId),
   ]);
   // After the move, so the dedupe check sees the transferred rows.

@@ -4,6 +4,8 @@ import { env } from "cloudflare:test";
 import { describe, expect, test } from "vitest";
 import { createAuth } from "./auth";
 import worker from "./index";
+import { purgeStaleAnonUsers } from "./purge";
+import { rekeyUserWork } from "./rekey";
 
 async function anonCookie(): Promise<string> {
   const auth = createAuth(env as unknown as Env, "http://localhost");
@@ -97,5 +99,56 @@ describe("PUT /api/cases/:caseId/session", () => {
     });
     const res = await callWorker("/api/cases/cholangitis001/session", { headers: { cookie: cookieB } });
     expect(await res.json()).toEqual({ simNow: 0 });
+  });
+});
+
+describe("case_session follows the account", () => {
+  test("rekey moves the clock to the linked account, guest clock winning conflicts", async () => {
+    const auth = createAuth(env as unknown as Env, "http://localhost");
+    const anon = (await auth.api.signInAnonymous())!.user.id;
+    const google = (await auth.api.signInAnonymous())!.user.id; // stand-in linked account
+
+    const seed = (scope: string, simNow: number) =>
+      env.DB.prepare(
+        `INSERT INTO case_session (scope, caseId, simNow, updatedAt) VALUES (?1, 'cholangitis001', ?2, 1)`,
+      )
+        .bind(scope, simNow)
+        .run();
+    await seed(anon, 5000); // guest's live clock
+    await seed(google, 1000); // pre-existing clock on the linked account (collides)
+
+    await rekeyUserWork(env.DB, anon, google);
+
+    const rows = await env.DB.prepare(
+      `SELECT simNow FROM case_session WHERE scope = ?1`,
+    )
+      .bind(google)
+      .all<{ simNow: number }>();
+    expect(rows.results.map((r) => r.simNow)).toEqual([5000]); // guest clock won, one row
+    const gone = await env.DB.prepare(`SELECT COUNT(*) AS n FROM case_session WHERE scope = ?1`)
+      .bind(anon)
+      .first<{ n: number }>();
+    expect(gone?.n).toBe(0);
+  });
+
+  test("purge removes an idle anon user's clock via FK cascade", async () => {
+    const auth = createAuth(env as unknown as Env, "http://localhost");
+    const stale = (await auth.api.signInAnonymous())!.user.id;
+    await env.DB.prepare(`UPDATE session SET expiresAt = '2020-01-01T00:00:00.000Z' WHERE userId = ?1`)
+      .bind(stale)
+      .run();
+    await env.DB.prepare(
+      `INSERT INTO case_session (scope, caseId, simNow, updatedAt) VALUES (?1, 'cholangitis001', 4200, 1)`,
+    )
+      .bind(stale)
+      .run();
+
+    const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString();
+    await purgeStaleAnonUsers(env.DB, cutoff);
+
+    expect(await env.DB.prepare(`SELECT id FROM user WHERE id = ?1`).bind(stale).first()).toBeNull();
+    expect(
+      await env.DB.prepare(`SELECT scope FROM case_session WHERE scope = ?1`).bind(stale).first(),
+    ).toBeNull();
   });
 });
