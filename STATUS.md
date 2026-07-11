@@ -2,11 +2,12 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-11 (Dynamic Patients Plan 4, product loop, built + verified locally;
-full suite green, browser-verified live: chronos advance, no-match, advance-on-sign,
-forward-only clamp all confirmed; Ryan-gated ship gate still pending; NOT pushed)
-Branch / worktree: main (this session NOT pushed, per standing rule)
-Latest session (8a7fe65..508af07, 16 commits): Dynamic Patients Plan 4 (product loop, on
+Last updated: 2026-07-11 (Dynamic Patients Plan 4, product loop, built + verified + SHIPPED
+to prod. Full suite green; browser-verified live locally; DEPLOYED to prod as version
+22282660 after applying remote migration 0004 first; authed /session confirmed 200 in prod.
+Git NOT pushed to origin yet, per standing rule; Ryan will push after some singleplayer bug fixes.)
+Branch / worktree: main (commits local, NOT pushed to origin, per standing rule)
+Latest session (8a7fe65..b8c8856, 18 commits): Dynamic Patients Plan 4 (product loop, on
 top of the Plan 3 engine) built subagent-driven off three written sub-plans (4a content +
 safety net, 4b advance + chronos, 4c tracker). `cholangitis001` now authors `events` /
 `rounds` / `chronos`: a 3-stage micro progression to a Final susceptibilities result, two
@@ -19,8 +20,8 @@ to an authored intent and calls `advanceSim(targetAt)`; `PUT /session` clamps
 walker (`events.walker.test.ts`) and an extended leak guard (every reachable dynamic state
 plus both NPC note bodies) lock the content safe; the contribution tracker
 (`lib/contribution.ts`, derived, no new table) renders inside the Performance dock. Full
-suite green: tsc clean, 265 node-pool tests (33 files), 34 workers-pool tests (4 files),
-lint clean, build emits dist/client + dist/legend. NOT pushed. See Done.
+suite green: tsc clean, 266 node-pool tests (33 files), 34 workers-pool tests (4 files),
+lint clean, build emits dist/client + dist/legend. SHIPPED to prod (version 22282660); git NOT pushed. See Done.
 --- PRIOR session (8582e98..b63b37b, 11 commits): Dynamic Patients v1 started: SPEC
 approved + committed (engine = Model B: server clock + client reveal, `case_event`
 deferred), Plans 1 (time model) + 2 (applyEvents fold refactor) built subagent-driven,
@@ -44,7 +45,7 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
-- Dynamic Patients Plan 4, product loop (2026-07-11, 8a7fe65..508af07, 16 commits,
+- Dynamic Patients Plan 4, product loop (2026-07-11, 8a7fe65..b8c8856, 18 commits,
   subagent-driven off 3 written sub-plans, every task review-clean or controller-gated):
   **4a (content + safety net)**: `cholangitis001/events.ts` authors `events` (a 3-stage
   micro progression, Gram stain -> E. coli ID -> final susceptibilities, each with its own
@@ -75,7 +76,7 @@ feedback (cce42a4..dc9f29b).
   yields a per-round "you" / "team" / "current" / "unreached" status, a rubric percent only
   on the rubric-scored round, and a neutral `aboveGrade` flag; renders as
   `ContributionTracker` inside the Performance dock (`WrapUpDock`, bottom-left). Full suite
-  green throughout: tsc, 265 node-pool tests (33 files), 34 workers-pool tests (4 files),
+  green throughout: tsc, 266 node-pool tests (33 files), 34 workers-pool tests (4 files),
   lint, build. Browser-verified live (chrome-devtools-axi, guest/ST3, cholangitis001):
   chronos advance (PUT `{simNow:208800}`, reply names the organism + susceptibilities,
   Notes count rises as both NPC notes reveal), no-match (an unrelated question gets the
@@ -259,13 +260,12 @@ feedback (cce42a4..dc9f29b).
   (6526b88..1939dea), full suite green, final review Ready-to-ship (1 fix applied),
   browser PASS; see the Done entry above for detail and the Flag-1 caveat.
   **Plan 4** (product loop: 4a content + safety net, 4b advance + chronos, 4c tracker)
-  DONE (8a7fe65..508af07, 16 commits), full suite green, browser-verified live (chronos
-  advance, no-match, advance-on-sign, forward-only clamp all confirmed); see the Done
-  entries above for detail and the decision log. The engine is no longer inert:
-  `cholangitis001` authors `events`/`rounds`/`chronos`. Dynamic Patients v1 is now
-  functionally COMPLETE on `main`. Outstanding: the Ryan-gated ship gate only (remote
-  migration 0004 + `npm run deploy`, unchanged by Plan 4 since Plan 4 added no new
-  migration); see Next concrete step.
+  DONE (8a7fe65..b8c8856, 18 commits incl. a final whole-branch-review fix), full suite
+  green, browser-verified live (chronos advance, no-match, advance-on-sign, forward-only
+  clamp all confirmed); see the Done entries above for detail and the decision log. The
+  engine is no longer inert: `cholangitis001` authors `events`/`rounds`/`chronos`. Dynamic
+  Patients v1 is now functionally COMPLETE on `main` and SHIPPED to prod (version 22282660;
+  see Next concrete step for the ship record). Git NOT pushed to origin yet.
 - Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
   ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
   Prior range 8574cee..5d8b502 (backend pivot: research,
@@ -273,17 +273,23 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-Dynamic Patients v1 is functionally COMPLETE on `main` (Plans 1-4, all Done above, NOT
-pushed). The only outstanding step is the Ryan-gated ship gate, UNCHANGED by Plan 4 (Plan 4
-added NO new migration, so the Plan-3 sequencing still applies exactly):
-1. `npx wrangler d1 migrations apply legend-db --remote` (applies migration 0004
-   `case_session`), STRICTLY BEFORE the deploy below (a worker live before the table
-   exists would 500 on `/session`; the Plan 3 decouple fix keeps notes rendering even
-   then, but sequence it right regardless).
-2. `npm run deploy`.
-3. Live checks: `/api/health`, a deep link, the unauthenticated work route, and the full
-   session/write loop on `cholangitis001` (mirroring the local browser verification
-   already done for Plans 3 and 4).
+Dynamic Patients v1 is functionally COMPLETE on `main` (Plans 1-4, all Done above) and
+SHIPPED to prod on 2026-07-11 as version `22282660`. Ship record (Ryan-driven):
+- Remote migration 0004 (`case_session`) applied FIRST (`wrangler d1 migrations apply
+  legend-db --remote`), THEN `npm run deploy`. Verified live: `/api/health` green, prod
+  serves the Plan 4 SPA bundle (`index-CGUz9bwV.js`), and an authed `GET /session` returns
+  `{"simNow":0}` (200, not a 500) confirming the clock endpoint works in prod.
+- Incident: an earlier `npm run deploy --local` (the `--local` is NOT forwarded to
+  wrangler; npm swallowed it) deployed prematurely as `92ef196d` BEFORE the migration; it
+  was rolled back (`wrangler rollback 79d2a874-...`) to the prior phase-3 version, then the
+  correct migration-first ship above was done. Lesson: verify locally first (done: 2
+  browser smokes), and apply the remote migration STRICTLY before deploy.
+
+NEXT (Ryan's stated plan): fix some singleplayer bugs, then `git push` (still NOT pushed to
+origin), then start a MULTIPLAYER branch. Multiplayer is fork D: the `case_session.scope`
+column already carries the namespace (value = userId today; becomes sessionId for shared
+sessions), so it is a value change, not a migration. See DYNAMIC_PATIENTS_SPEC.md §4.2
+(hospital shell) + §13 (multiplayer deferred, scope column carried now).
 
 DEV NOTE (Plan 4b forward-only clamp): the server `PUT /session` now clamps
 `simNow = MAX(case_session.simNow, ?)`, so a case's sim clock can no longer be reset by
@@ -379,11 +385,11 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   with a resume note in the backlog.
 
 ## Notes for next session
-- The CURRENT next concrete step is the Ryan-gated ship gate ONLY (see "Next concrete
-  step" above): Dynamic Patients v1 (Plans 1-4) is functionally complete on `main`. An
-  older version of this bullet pointed at writing Plan 4; Plan 4 is now Done (see the
-  Done section).
-- Verify target: `npm test` (265 tests, 33 files, node pool, verified green this
+- Dynamic Patients v1 (Plans 1-4) is COMPLETE on `main` and SHIPPED to prod (version
+  22282660, remote migration 0004 applied, authed /session verified 200 in prod). The
+  CURRENT next step is Ryan's: fix singleplayer bugs, `git push` (NOT pushed to origin
+  yet), then a multiplayer branch (see "Next concrete step").
+- Verify target: `npm test` (266 tests, 33 files, node pool, verified green this
   session), `npm run test:workers` (34 tests, 4 files, real local D1, verified green
   this session), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
@@ -391,15 +397,11 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   (emits `dist/client` + `dist/legend` since the Cloudflare vite plugin).
 - Deploy is `npm run deploy` ONLY; remote D1 migrations
   (`npx wrangler d1 migrations apply legend-db --remote`) always gated on Ryan.
-- Ship gate outstanding (Ryan-gated, NOT done this plan, UNCHANGED by Plan 4 since Plan 4
-  added no new migration): remote migration 0004
-  (`npx wrangler d1 migrations apply legend-db --remote`) STRICTLY BEFORE `npm run deploy`
-  (order matters: a worker live before the table exists would 500 on `/session`; the
-  decouple fix in 1939dea keeps notes rendering even then, but sequence it right
-  regardless). The engine only exists in local D1 + the unshipped worker build until this
-  runs; unlike Plan 3, it no longer ships INERT once it does: `cholangitis001` authors
-  `events`/`rounds`/`chronos`, so the live loop goes live for that case the moment this
-  ships.
+- Ship gate DONE (2026-07-11): remote migration 0004 applied, then `npm run deploy` = prod
+  version 22282660, verified live (authed `/session` -> 200 `{"simNow":0}`). The dynamic
+  `cholangitis001` loop is now live in prod. `git push` to origin still pending (Ryan).
+  Order lesson for future ships: remote migration STRICTLY before deploy (a premature
+  deploy `92ef196d` was rolled back to `79d2a874` before the correct migration-first ship).
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
 - Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
   reload or they're lost. Signed/pended user notes persist server-side in D1

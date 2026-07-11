@@ -1,10 +1,13 @@
 # Dynamic Patients v1: design spec
 
 Status: design approved 2026-07-10 (forks A/B/C/D confirmed). Engine (§5-§7, Model B) SHIPPED
-2026-07-10 as Plan 3 (commit range 6526b88..1939dea, on main, not pushed; Ryan-gated remote
-migration + deploy still pending). Pilot content authoring (§8-§11: chronos, NPC notes,
-cholangitis001 `events.ts`) is Plan 4, NOT yet started, so the engine currently ships INERT (no
-case authors an `events.ts`).
+2026-07-10 as Plan 3. Pilot content + product loop (§8-§11: chronos, NPC notes, cholangitis001
+`events.ts`, contribution tracker) SHIPPED 2026-07-11 as Plan 4 (commit range 8a7fe65..b8c8856,
+on main; git NOT pushed to origin yet). DEPLOYED to prod 2026-07-11 (version 22282660, remote
+migration 0004 applied first): the engine is no longer inert, `cholangitis001` authors
+`events`/`rounds`/`chronos` and the dynamic loop is live. Deferred to later (see §13): the
+multiplayer transport + `scope = sessionId` (fork D column already carried), the hospital-select
+shell (§4.2), and the fleet-wide time-model migration.
 Author: Ryan + Claude. Input: `DYNAMIC_PATIENTS.md` (research) plus a four-stream
 codebase-fit audit of the shipped Phase 3 code. This is the SPEC. A PLAN follows via
 the writing-plans step; do not implement from this document directly.
