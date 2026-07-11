@@ -97,6 +97,17 @@ the persona-setup screen never fires. The Google display name is not read.
 
 ## 5. Fix B: alias note gate (client) plus addendum hole (server)
 
+> **Amendment (Ryan, 2026-07-11, decided during execution):** the server-side addendum
+> ownership check described below was implemented, then REMOVED. Addenda are UNIVERSAL —
+> any HCP addends any note, the same way a colleague adds a note to a real chart (an FY2
+> signs, a registrar or consultant addends to escalate or cosign; the competence penalty is
+> the guardrail here, not access control). `canAddend` does not exist: the client gates the
+> Addendum affordance only by `status !== "incomplete"`. Only edit and delete are
+> persona-gated (`canEdit`/`canDelete` from `src/lib/noteOwnership.ts`, which takes no
+> `playerHcpId` argument). The rest of this section, including the `SELECT 1 FROM
+> user_note ...` 404 check and the `canAddend` rule below, describes the ORIGINAL plan and
+> is superseded by this amendment; kept for the record, not as current behavior.
+
 ### Problem
 - Client: note ownership predicates in `PatientWorkspace.tsx` key on account membership
   (`isUserNote`) and the static case-level `playerHcpId`, with zero alias awareness. After

@@ -2,12 +2,40 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-11 (Dynamic Patients Plan 4, product loop, built + verified + SHIPPED
-to prod. Full suite green; browser-verified live locally; DEPLOYED to prod as version
-22282660 after applying remote migration 0004 first; authed /session confirmed 200 in prod.
-Git NOT pushed to origin yet, per standing rule; Ryan will push after some singleplayer bug fixes.)
+Last updated: 2026-07-11 (Pre-multiplayer fixes batch: 4 near-independent singleplayer
+fixes (guest-to-Google identity link, universal addenda + persona-gated edit/delete, full
+workspace reload resume, next-job banner) built subagent-driven off a spec+plan, all 9
+tasks review-clean or controller-gated. Full gate green: tsc, 280 node tests (36 files), 35
+workers tests (4 files), lint, build. NOT pushed to origin; remaining = browser
+verification, then Ryan's `git push`, then a multiplayer branch.)
 Branch / worktree: main (commits local, NOT pushed to origin, per standing rule)
-Latest session (8a7fe65..b8c8856, 18 commits): Dynamic Patients Plan 4 (product loop, on
+Latest session (8f16eeb..492f61a, 9 commits): Pre-multiplayer fixes batch (spec
+`docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md`, plan
+`docs/superpowers/plans/2026-07-11-premultiplayer-fixes.md`), four fixes to land before the
+multiplayer branch diverges. **Fix A** (`src/worker/rekey.ts`): guest-to-Google account
+link now WRITES the guest's persona (forename/surname/grade/hcpId) directly onto the linked
+Google user row instead of snapshotting it as a previous alias, so the guest identity
+becomes the account's default persona (Google display name discarded, no new alias,
+persona-setup screen no longer fires post-link). **Fix B** (new `src/lib/noteOwnership.ts`):
+a pure `{canEdit, canDelete}` helper gates edit/delete to the note's AUTHORING PERSONA (an
+alias can't edit or delete another persona's note under the same account). Addenda are
+UNIVERSAL by an owner decision mid-batch (any HCP addends any note, like a real chart) — a
+server-side addendum ownership check was added then reverted; the client addendum
+affordance is gated only by `status !== "incomplete"`, no ownership at all. The old
+`isUserNote`/`ownNote` predicates are gone; `PatientWorkspace`/`ChartReview`/`NotesBrowser`
+now use `canEdit`/`canDelete`. **Fix C**: reload now RESUMES the whole workspace.
+`CaseUiState` gained `openNoteIds`/`activePreviewId` (the Notes preview tabs, lifted out of
+`NotesBrowser` local state, so they also survive main-tab switches). `App.tsx` persists
+`{openCaseIds, activeCaseId, caseUi}` (open tabs, active tab, per-case UI incl. unsigned
+draft bodies and the preview tabs) to a new localStorage key `legend.session.<userId>` (per
+better-auth user id, debounced 250ms, swept on sign-out), hydrated via the pure
+`src/lib/sessionState.ts` `hydrateSession` (registry-filtered, backfilled over
+`DEFAULT_UI`). **Fix D** (new `src/components/NextJobBanner.tsx` + `src/lib/nextJob.ts`): a
+"Next: <job>" hint under the main tab bar in singleplayer, dismissible via a new global
+device pref `legend.hideNextJob` (`NEXT_JOB_HIDE_KEY` from `src/lib/session.ts`,
+sweep-exempt like `legend-skip-delete-confirm`). Full gate green: tsc clean, 280 node-pool
+tests (36 files), 35 workers-pool tests (4 files), lint clean, build OK. NOT pushed.
+--- PRIOR session (8a7fe65..b8c8856, 18 commits): Dynamic Patients Plan 4 (product loop, on
 top of the Plan 3 engine) built subagent-driven off three written sub-plans (4a content +
 safety net, 4b advance + chronos, 4c tracker). `cholangitis001` now authors `events` /
 `rounds` / `chronos`: a 3-stage micro progression to a Final susceptibilities result, two
@@ -45,6 +73,26 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
+- Pre-multiplayer fixes batch (2026-07-11, 8f16eeb..492f61a, 9 commits across 4 fixes,
+  subagent-driven off a spec+plan, every task review-clean or controller-gated): **Fix A**
+  guest-to-Google account link (`src/worker/rekey.ts`) now WRITES the guest's persona
+  (forename/surname/grade/hcpId) onto the linked Google user row instead of snapshotting it
+  as a previous alias, so the guest identity becomes the account's default persona (Google
+  display name discarded, no new alias, persona-setup screen no longer fires post-link).
+  **Fix B** new `src/lib/noteOwnership.ts` (`{canEdit, canDelete}`) gates edit/delete to the
+  note's authoring persona; addenda are UNIVERSAL by an owner decision mid-batch (any HCP
+  addends any note) — a server-side addendum ownership check was added then reverted; the
+  client addendum gate is `status !== "incomplete"` only, no ownership. Old
+  `isUserNote`/`ownNote` predicates gone. **Fix C** reload now RESUMES the workspace:
+  `CaseUiState` gained `openNoteIds`/`activePreviewId` (Notes preview tabs, lifted out of
+  local component state); `App.tsx` persists `{openCaseIds, activeCaseId, caseUi}` to
+  `legend.session.<userId>` (debounced, swept on sign-out) hydrated via the pure
+  `src/lib/sessionState.ts` `hydrateSession`; unsigned draft bodies ride along. **Fix D**
+  new `src/components/NextJobBanner.tsx` + `src/lib/nextJob.ts`: a "Next: <job>" hint under
+  the main tab bar in singleplayer, dismissible via global device pref
+  `legend.hideNextJob` (`NEXT_JOB_HIDE_KEY`, sweep-exempt). Full gate green: tsc clean, 280
+  node-pool tests (36 files), 35 workers-pool tests (4 files), lint clean, build OK. NOT
+  pushed.
 - Dynamic Patients Plan 4, product loop (2026-07-11, 8a7fe65..b8c8856, 18 commits,
   subagent-driven off 3 written sub-plans, every task review-clean or controller-gated):
   **4a (content + safety net)**: `cholangitis001/events.ts` authors `events` (a 3-stage
@@ -273,6 +321,12 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
+The pre-multiplayer fixes batch (Fix A/B/C/D, `8f16eeb..492f61a`) is DONE on `main`, full
+gate green (see Done above). Remaining: browser verification per each fix's Acceptance
+section in `docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md` §4-7 (fresh
+guest + cholangitis001 for the dynamic-loop parts), then Ryan's `git push` (still NOT
+pushed to origin), then start a MULTIPLAYER branch off a stable origin `main`.
+
 Dynamic Patients v1 is functionally COMPLETE on `main` (Plans 1-4, all Done above) and
 SHIPPED to prod on 2026-07-11 as version `22282660`. Ship record (Ryan-driven):
 - Remote migration 0004 (`case_session`) applied FIRST (`wrangler d1 migrations apply
@@ -285,11 +339,10 @@ SHIPPED to prod on 2026-07-11 as version `22282660`. Ship record (Ryan-driven):
   correct migration-first ship above was done. Lesson: verify locally first (done: 2
   browser smokes), and apply the remote migration STRICTLY before deploy.
 
-NEXT (Ryan's stated plan): fix some singleplayer bugs, then `git push` (still NOT pushed to
-origin), then start a MULTIPLAYER branch. Multiplayer is fork D: the `case_session.scope`
-column already carries the namespace (value = userId today; becomes sessionId for shared
-sessions), so it is a value change, not a migration. See DYNAMIC_PATIENTS_SPEC.md §4.2
-(hospital shell) + §13 (multiplayer deferred, scope column carried now).
+Multiplayer is fork D: the `case_session.scope` column already carries the namespace
+(value = userId today; becomes sessionId for shared sessions), so it is a value change,
+not a migration. See DYNAMIC_PATIENTS_SPEC.md §4.2 (hospital shell) + §13 (multiplayer
+deferred, scope column carried now).
 
 DEV NOTE (Plan 4b forward-only clamp): the server `PUT /session` now clamps
 `simNow = MAX(case_session.simNow, ?)`, so a case's sim clock can no longer be reset by
@@ -387,10 +440,11 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
 ## Notes for next session
 - Dynamic Patients v1 (Plans 1-4) is COMPLETE on `main` and SHIPPED to prod (version
   22282660, remote migration 0004 applied, authed /session verified 200 in prod). The
-  CURRENT next step is Ryan's: fix singleplayer bugs, `git push` (NOT pushed to origin
+  pre-multiplayer fixes batch (Fix A/B/C/D) is now ALSO done on `main` (not pushed). The
+  CURRENT next step is Ryan's: browser verification, `git push` (NOT pushed to origin
   yet), then a multiplayer branch (see "Next concrete step").
-- Verify target: `npm test` (266 tests, 33 files, node pool, verified green this
-  session), `npm run test:workers` (34 tests, 4 files, real local D1, verified green
+- Verify target: `npm test` (280 tests, 36 files, node pool, verified green this
+  session), `npm run test:workers` (35 tests, 4 files, real local D1, verified green
   this session), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
   generated `worker-configuration.d.ts` is eslint-ignored), `npm run build`
@@ -403,9 +457,11 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   Order lesson for future ships: remote migration STRICTLY before deploy (a premature
   deploy `92ef196d` was rolled back to `79d2a874` before the correct migration-first ship).
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
-- Unsigned note drafts are in-memory only (App.tsx useState); sign or pend before a
-  reload or they're lost. Signed/pended user notes persist server-side in D1
-  (phase 3), keyed to the better-auth account.
+- Unsigned note drafts now SURVIVE a reload (pre-multiplayer Fix C, 2026-07-11): the whole
+  workspace (open tabs, active tab, per-case `CaseUiState` incl. draft bodies and the Notes
+  preview tabs) persists to `legend.session.<userId>`, debounced, swept on sign-out.
+  Signed/pended user notes persist server-side in D1 (phase 3), keyed to the better-auth
+  account.
 - The editor body is contentEditable HTML; scoring/reflow go through the pure libs
   (`noteText.ts`, `reflow.ts`), which use string transforms not DOMParser so node
   tests and the browser agree.
