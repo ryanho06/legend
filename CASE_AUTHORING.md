@@ -156,29 +156,75 @@ Add one entry to `src/data/patients/index.ts`:
   "64F, epigastric pain + rigors + new jaundice. ?Acute cholangitis (TG18 II),
   for urgent ERCP."
 
-## Dynamic events (optional, `events.ts`)
+## Dynamic events (optional, `events.ts` + `rounds` + `chronos`)
 
 A case may opt into runtime reveals on top of its static chart: a result appearing later,
-an encounter row being added, a vitals trend advancing, a branching flag flipping. This is
-optional and additive: a case with no `events.ts` behaves exactly as it does today (the
-reveal filter over an empty list is a no-op).
+an encounter row being added, a vitals trend advancing, an NPC ward-round note filed by
+the rest of the team, a Chronos time-skip channel. This is optional and additive: a case
+with no `events.ts` behaves exactly as it does today (the reveal filter over an empty list
+is a no-op). `cholangitis001` (`src/data/patients/cholangitis001/events.ts`) is the worked
+reference; when this document and that file disagree, the file wins.
 
-- Export `events: AuthoredEvent[]` from `<caseId>/events.ts` (type in `src/types.ts`).
-  Each entry is `{ at, seq, dedupeKey?, event }`:
+A dynamic case's `events.ts` exports three arrays, all optional but authored together:
+
+- **`events: AuthoredEvent[]`** (type in `src/types.ts`). Each entry is
+  `{ at, seq, dedupeKey?, event }`:
   - `at`: a sim-offset in **seconds** from the case's `anchor`, not a wall-clock time and
     not a static document `timestamp`. The engine compares `at` against the per-case
     `simNow` clock, never a display string.
-  - `seq`: total fold order across the case's authored events; keep it monotonic with `at`.
+  - `seq`: total fold order across the case's authored events; keep it monotonic with `at`
+    (on an `at` tie, an `encounter.append` must precede the `result.release` or
+    `note.create` that lands on it, so the row exists when the receipt/note folds).
   - `dedupeKey` (optional): a handle for later suppression/dedupe.
   - `event`: a `CaseEvent` reveal, one of `note.create` / `note.addendum` /
     `result.release` / `encounter.append` / `vitals.append` / `flag.set`.
-- A case needs an `anchor` (see above) for its `events.ts` `at` offsets to have a fixed
-  origin; don't author `events.ts` against a case with no `anchor`.
-- Opt in by importing `events.ts` in `src/data/patients/index.ts` and setting `events:`
-  on the case's registry entry.
-- The full worked example (cholangitis001: a micro Final result reveal, NPC round notes,
-  a vitals trend, and chronos-driven intents) lands in Plan 4. No case authors `events.ts`
-  yet.
+  - **Any round or result that should show up in the Encounters timeline must also author
+    an `encounter.append`** for it. `result.release` and `note.create` do not create their
+    own encounter row; if a chart reveal needs one, author it as a separate event with the
+    same `at`, sequenced first.
+- **`rounds: RoundSpec[]`**: the case's action-keyed morning-round schedule (`{ at,
+  encounterId, label, npcNoteId? }`). Round 0 is normally the trainee's rubric-scored task
+  and reuses the static `enc-admission` encounter; later rounds get their own
+  `encounterId` so a trainee note written at that round suppresses the round's NPC note.
+  Signing a fresh round note advances the clock to `nextRoundAt`.
+- **`chronos: ChronosIntent[]`**: deterministic time-skip intents (`{ triggers, targetAt,
+  reply }`), matched with the same rubric-trigger engine as rubric items (`RubricTrigger`
+  groups, no LLM). A matched intent advances `simNow` straight to `targetAt`, which lets
+  intervening rounds' NPC notes materialise on catch-up.
+
+**FLAG 1 (anchor vs static epochs):** cholangitis001's *static*, pre-authored note
+`timestamp` epochs sit roughly 24-33 hours BEHIND the case's `anchor` (the static notes
+were filed the day before the admission moment the anchor marks). Every `events.ts` `at`
+offset is measured from the **anchor**, never from those static epochs; do not eyeball "N
+hours after the last static note" when authoring a reveal `at`, compute it from the anchor.
+
+**NPC-note leak safety (mandatory, CI-enforced):** an authored NPC ward-round note (a
+`note.create` your `rounds[].npcNoteId` names) must score **ZERO** against the case's
+rubric: it exists to make the chart feel alive between trainee-written rounds, not to hand
+the trainee any rubric answer. Two automated checks enforce this and both must pass:
+- `src/data/patients/progress-autofill.test.ts` (the existing PROGRESS SmartText leak
+  guard) is extended to score every registered case's authored NPC note bodies against
+  that case's own rubric and assert zero matches, alongside its per-reachable-dynamic-state
+  sweep (folds `applyEvents(revealEvents(...))` at every `at`/`round.at`/`chronos.targetAt`
+  the case can reach and re-runs the autofill leak check at each one).
+- `<caseId>/events.walker.test.ts` (per dynamic case) replays the authored timeline
+  end-to-end: `seq` stays monotonic with `at`, every event is reachable, no `note.create`
+  or `result.release` references a dangling `encounterId`, reveals are a monotonic prefix
+  as `simNow` advances, NPC suppression fires once the round's encounter is covered, and
+  every chronos `targetAt` names a real authored `at`.
+
+**NPC notes reveal at the FOLLOWING round's `at`**, not their own dated timestamp: an NPC
+note is DATED the day it was notionally written (its `timestamp` field, for display) but
+only becomes visible once the trainee has moved past the round it covers, i.e. at the next
+round's `at`. This is what lets a trainee who skips writing a round see the team's note
+instead of a gap, while a trainee who writes that round's note suppresses the NPC one
+entirely (`revealEvents`'s `coveredEncounterIds`, keyed on `RoundSpec.encounterId`).
+
+Wire-up: import `events`/`rounds`/`chronos` in `src/data/patients/index.ts` and set the
+matching keys on the case's registry entry (all three are optional; a case can opt into
+just one, e.g. `events` with no `rounds`/`chronos`). A case needs an `anchor` for its
+`events.ts` `at` offsets to have a fixed origin; don't author `events.ts` against a case
+with no `anchor`.
 
 ## Acceptance checklist
 
