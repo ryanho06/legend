@@ -36,13 +36,11 @@ export function formatNoteStamp(epochSec: number): string {
 }
 
 /**
- * The case's current sim-time in epoch seconds. Falls back to the real clock for
- * legacy cases that have no authored anchor: those notes still stamp the real
- * wall-clock instant (`Date.now()`), but like every other display in the app that
- * instant is now rendered in UTC (this module's invariant, see the header above),
- * not the viewer's local time. So a legacy case's trainee-note date can differ
- * from the date on the viewer's own clock.
+ * The case's current sim-time in epoch seconds: the case anchor plus a sim
+ * offset (`simNow`, seconds since the anchor). Falls back to the real wall
+ * clock for legacy cases with no anchor (offset ignored there); like every
+ * display in the app that instant is rendered in UTC (this module's invariant).
  */
-export function caseNow(anchor: number | undefined): number {
-  return anchor ?? Math.floor(Date.now() / 1000);
+export function caseNow(anchor: number | undefined, offset = 0): number {
+  return anchor === undefined ? Math.floor(Date.now() / 1000) : anchor + offset;
 }

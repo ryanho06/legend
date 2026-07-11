@@ -26,12 +26,13 @@ export function buildUserNote(
   plainBody: string,
   status: NoteStatus,
   nowSec: number,
+  encounterId = "enc-admission",
 ): ClinicalNote {
   const stamp = formatNoteStamp(nowSec);
   return {
     kind: "note",
     id: "", // the server assigns the real id when the note is POSTed
-    encounterId: "enc-admission",
+    encounterId,
     category: CATEGORY_BY_TYPE[draft.noteType] ?? "Progress",
     noteType: draft.noteType,
     author: `${user.surname.trim()}, ${user.forename.trim()}`,
