@@ -126,7 +126,13 @@ export function NotesBrowser({
     setFrozenTabWidth(
       firstTab && openNotes.length > 2 ? firstTab.getBoundingClientRect().width : null,
     );
-    onPreviewChange({ openNoteIds: openIds.filter((openId) => openId !== id) });
+    const remaining = openIds.filter((openId) => openId !== id);
+    // When the closed tab was the active one, hand focus to the neighbour so the
+    // persisted activePreviewId never dangles at a note that is no longer open.
+    onPreviewChange({
+      openNoteIds: remaining,
+      ...(id === previewId ? { activePreviewId: remaining.at(-1) ?? null } : {}),
+    });
   }
 
   function toggleList() {
