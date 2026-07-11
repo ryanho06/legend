@@ -273,8 +273,8 @@ export function NotesBrowser({
               )}
               <NotePreview
                 note={activeNote}
-                // Only user-authored notes are deletable; deleting also
-                // closes the note's preview tab.
+                // Only notes authored by the current persona are deletable;
+                // deleting also closes the note's preview tab.
                 onDelete={
                   activeNote && canDelete(activeNote)
                     ? () => {
