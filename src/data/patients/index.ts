@@ -8,6 +8,11 @@ import {
 import { caseCholangitis001Encounters } from "./cholangitis001/encounters";
 import { caseCholangitis001Rubric } from "./cholangitis001/rubric";
 import { caseCholangitis001Summary } from "./cholangitis001/summary";
+import {
+  cholangitis001Chronos,
+  cholangitis001Events,
+  cholangitis001Rounds,
+} from "./cholangitis001/events";
 import appendicitis001Patient from "./appendicitis001/patient.json";
 import { bloods as appendicitis001Bloods } from "./appendicitis001/bloods";
 import {
@@ -154,6 +159,9 @@ export const caseRegistry: CaseBundle[] = [
     rubric: caseCholangitis001Rubric,
     summary: caseCholangitis001Summary,
     bloods: cholangitis001Bloods,
+    events: cholangitis001Events,
+    rounds: cholangitis001Rounds,
+    chronos: cholangitis001Chronos,
   },
   {
     id: "appendicitis001",

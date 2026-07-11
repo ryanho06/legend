@@ -76,9 +76,16 @@ export function PatientWorkspace({
   // trainee's own work, fold onto the static case through one applyEvents seam.
   // Reveals go first so trainee notes sort last (newest). With no events.ts and
   // simNow 0 this is identical to the pre-engine merge.
+  // Encounter ids the trainee's own notes already cover; an authored NPC round
+  // note for a covered encounter is suppressed so there is exactly one note per
+  // round (spec §9).
+  const coveredEncounterIds = useMemo(
+    () => new Set(userNotes.map((note) => note.encounterId)),
+    [userNotes],
+  );
   const revealed = useMemo(
-    () => revealEvents(activeCase.events ?? [], work.simNow),
-    [activeCase.events, work.simNow],
+    () => revealEvents(activeCase.events ?? [], work.simNow, coveredEncounterIds),
+    [activeCase.events, work.simNow, coveredEncounterIds],
   );
   const events = useMemo(
     () => [...revealed, ...workToEvents(userNotes, addenda)],
