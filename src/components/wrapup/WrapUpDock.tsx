@@ -30,6 +30,7 @@ export function WrapUpDock({
   attempt,
   onSubmitAttempt,
   onClearAttempt,
+  simNow,
 }: {
   open: boolean;
   onToggle: () => void;
@@ -40,6 +41,7 @@ export function WrapUpDock({
   attempt: StoredAttempt | null;
   onSubmitAttempt: (text: string, signed: boolean) => void;
   onClearAttempt: () => void;
+  simNow: number;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -104,6 +106,7 @@ export function WrapUpDock({
               onSubmitAttempt={onSubmitAttempt}
               onClearAttempt={onClearAttempt}
               embedded
+              simNow={simNow}
             />
           </div>
         </div>

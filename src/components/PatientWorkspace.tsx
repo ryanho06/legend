@@ -426,6 +426,7 @@ export function PatientWorkspace({
         userNotes={userNotes}
         user={user}
         attempt={work.attempt}
+        simNow={work.simNow}
         onSubmitAttempt={(text, signed) => {
           setSaveError(null);
           work.saveAttempt(text, signed).catch(() => setSaveError("Couldn't save the attempt."));

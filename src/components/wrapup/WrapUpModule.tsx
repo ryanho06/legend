@@ -4,9 +4,11 @@ import { formatClinician } from "../../lib/clinician";
 import { gradeLabel, isOverreach } from "../../lib/grades";
 import { htmlToPlainText, wordCount } from "../../lib/noteText";
 import { scoreNote } from "../../lib/rubric";
+import { buildContribution } from "../../lib/contribution";
 import type { StoredAttempt } from "../../lib/api";
 import { useCase } from "../../context/CaseContext";
 import type { ClinicalNote, NoteDraft, UserProfile } from "../../types";
+import { ContributionTracker } from "./ContributionTracker";
 import { FeedbackReport } from "./FeedbackReport";
 
 type Candidate = {
@@ -31,6 +33,7 @@ export function WrapUpModule({
   onSubmitAttempt,
   onClearAttempt,
   embedded = false,
+  simNow,
 }: {
   editors: NoteDraft[];
   userNotes: ClinicalNote[];
@@ -40,8 +43,18 @@ export function WrapUpModule({
   onClearAttempt: () => void;
   /** When docked in the floating panel, hide the module's own title row. */
   embedded?: boolean;
+  simNow: number;
 }) {
-  const { rubric } = useCase();
+  const liveCase = useCase();
+  const { rubric } = liveCase;
+  const contribution = buildContribution({
+    rounds: liveCase.rounds ?? [],
+    userNotes,
+    liveNotes: liveCase.notes,
+    rubric,
+    userGrade: user.grade,
+    simNow,
+  });
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const candidates: Candidate[] = [
@@ -88,6 +101,7 @@ export function WrapUpModule({
 
   return (
     <div className={embedded ? "wrapup-module embedded" : "wrapup-module"}>
+      <ContributionTracker rows={contribution} />
       {!embedded && (
         <div className="wrapup-title-row">
           <h1>

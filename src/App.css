@@ -3585,3 +3585,64 @@ button {
   cursor: pointer;
   color: #1d4ed8;
 }
+
+/* Contribution tracker (Performance dock, spec §3). */
+.contribution-tracker {
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: #fafbfc;
+}
+.contribution-head {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.contribution-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.contribution-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 3px 0;
+}
+.contribution-label {
+  color: #1e293b;
+}
+.contribution-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.contribution-percent {
+  font-weight: 600;
+  color: #0f766e;
+}
+.contribution-status {
+  color: #64748b;
+}
+.contribution-row.you .contribution-status {
+  color: #0f766e;
+}
+.contribution-row.unreached .contribution-status {
+  color: #94a3b8;
+}
+.contribution-above {
+  color: #b45309;
+  font-size: 11px;
+  border: 1px solid #f5d9a8;
+  background: #fef6e7;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
