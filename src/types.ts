@@ -421,6 +421,10 @@ export type CaseBundle = {
   events?: AuthoredEvent[];
   /** Runtime-only branching flags written by applyEvents (flag.set). Authored cases never set this. */
   flags?: Record<string, boolean | number>;
+  /** Round schedule for the action-keyed clock (Plan 4). Absent = no rounds. */
+  rounds?: RoundSpec[];
+  /** Deterministic chronos intents (Plan 4, §8). Absent = no chronos channel. */
+  chronos?: ChronosIntent[];
 };
 
 /**
@@ -451,6 +455,37 @@ export type AuthoredEvent = {
   dedupeKey?: string;
   /** The overlay event folded when this reveals. */
   event: CaseEvent;
+};
+
+/**
+ * One morning-round note opportunity in a dynamic case's timeline (Plan 4).
+ * Signing a fresh note at a round advances the sim-clock to the next round;
+ * the round's `encounterId` is stamped on the trainee's note so the NPC note
+ * that would otherwise cover the round is suppressed (spec §9).
+ */
+export type RoundSpec = {
+  /** Sim-offset in seconds from the case anchor when this round occurs. */
+  at: number;
+  /** Encounter a note written at this round belongs to (drives NPC suppression). */
+  encounterId: string;
+  /** Human label for the contribution tracker, e.g. "Progress note (day 2)". */
+  label: string;
+  /** Authored NPC note id that covers this round if the trainee skips it. */
+  npcNoteId?: string;
+};
+
+/**
+ * A deterministic chronos intent (spec §8): phrasings that pull an authored
+ * reveal forward by skipping time. Matching reuses the rubric tokenizer; the
+ * intent fires if ANY trigger matches (AND within a trigger's groups).
+ */
+export type ChronosIntent = {
+  /** Rubric-style triggers; the intent fires if ANY of them matches. */
+  triggers: RubricTrigger[];
+  /** Sim-offset seconds to advance `simNow` to on a match (an authored event's `at`). */
+  targetAt: number;
+  /** Templated reply naming the revealed datum. */
+  reply: string;
 };
 
 export type RubricItemResult = {
