@@ -167,12 +167,8 @@ describe("PUT and DELETE /api/notes/:id", () => {
 describe("addenda and attempts", () => {
   test("addendum rows accumulate and come back in order", async () => {
     const cookie = await anonCookie();
-    // B2 added a server-side ownership check on the addenda route (SELECT 1 FROM
-    // user_note WHERE id=? AND userId=?), so the target note must exist as a
-    // user_note row the caller owns; a synthetic non-owned id now 404s.
-    const note = await createNote(cookie, "owner note", "signed");
     for (const body of ["first", "second"]) {
-      const res = await callWorker(`/api/notes/${note.id}/addenda`, {
+      const res = await callWorker("/api/notes/note-adm-1/addenda", {
         method: "POST",
         headers: { cookie, "content-type": "application/json" },
         body: JSON.stringify({ caseId: "cholangitis001", body }),
@@ -182,7 +178,7 @@ describe("addenda and attempts", () => {
     const workRes = await callWorker("/api/cases/cholangitis001/work", { headers: { cookie } });
     const data = (await workRes.json()) as { addenda: { noteId: string; body: string }[] };
     expect(data.addenda.map((a) => a.body)).toEqual(["first", "second"]);
-    expect(data.addenda[0].noteId).toBe(note.id);
+    expect(data.addenda[0].noteId).toBe("note-adm-1");
   });
 
   test("rejects an addendum with an empty caseId", async () => {
@@ -336,30 +332,5 @@ describe("purgeStaleAnonUsers", () => {
     expect(await env.DB.prepare(`SELECT id FROM user WHERE id = ?1`).bind(stale).first()).toBeNull();
     expect(await env.DB.prepare(`SELECT id FROM user_note WHERE id = 'stale-n1'`).first()).toBeNull();
     expect(await env.DB.prepare(`SELECT id FROM user WHERE id = ?1`).bind(active).first()).not.toBeNull();
-  });
-});
-
-describe("POST /api/notes/:id/addenda ownership", () => {
-  test("404 when the target note is not the caller's", async () => {
-    const owner = await anonCookie();
-    const created = await createNote(owner, "owner note", "signed");
-    const stranger = await anonCookie();
-    const res = await callWorker(`/api/notes/${created.id}/addenda`, {
-      method: "POST",
-      headers: { cookie: stranger, "content-type": "application/json" },
-      body: JSON.stringify({ caseId: "cholangitis001", body: "sneaky addendum" }),
-    });
-    expect(res.status).toBe(404);
-  });
-
-  test("201 when addending your own note", async () => {
-    const cookie = await anonCookie();
-    const created = await createNote(cookie, "mine", "signed");
-    const res = await callWorker(`/api/notes/${created.id}/addenda`, {
-      method: "POST",
-      headers: { cookie, "content-type": "application/json" },
-      body: JSON.stringify({ caseId: "cholangitis001", body: "clarify" }),
-    });
-    expect(res.status).toBe(201);
   });
 });

@@ -1,26 +1,24 @@
 import type { Note } from "../types";
 
 /**
- * Who may act on a note, from the CURRENT persona's point of view. Server-side,
- * ownership of work is the account (better-auth user.id); this adds a
- * client-only realism layer so switching persona behaves like a real chart: you
- * edit/delete only what your current persona authored, but you may addend any
- * note your account owns (cross-clinician addenda are normal). Pure; no React.
+ * Whether the CURRENT persona may EDIT or DELETE a note. In a real chart you
+ * only rewrite or withdraw your own notes; addenda, by contrast, are universal
+ * (any HCP appends to any note) and are deliberately NOT gated here (the
+ * addendum action is gated only by note status at the callsite). Server-side,
+ * work ownership is the account (better-auth user.id); this is a client-only
+ * realism layer that keeps aliases from editing each other's notes. Pure; no React.
  *
- * - userNotes:   every note the server returned for this account + case.
- * - myHcpId:     the live persona's doctor id (UserProfile.hcpId).
- * - playerHcpId: the static case-persona the trainee plays (CaseBundle.playerHcpId).
+ * - userNotes: every note the server returned for this account + case.
+ * - myHcpId:   the live persona's doctor id (UserProfile.hcpId).
  */
 export function noteOwnership(
   note: Note,
-  args: { userNotes: Note[]; myHcpId: string; playerHcpId?: string },
-): { canEdit: boolean; canDelete: boolean; canAddend: boolean } {
-  const { userNotes, myHcpId, playerHcpId } = args;
+  args: { userNotes: Note[]; myHcpId: string },
+): { canEdit: boolean; canDelete: boolean } {
+  const { userNotes, myHcpId } = args;
   const isAccountNote = userNotes.some((n) => n.id === note.id);
-  // Authored by the persona currently signed in. A legacy account note with no
-  // stamped authorId is grandfathered to the current persona (all notes from
-  // buildUserNote do stamp authorId, so this only covers pre-existing rows).
+  // Authored by the persona currently signed in; a legacy account note with no
+  // stamped authorId is grandfathered to the current persona.
   const mine = isAccountNote && (note.authorId == null || note.authorId === myHcpId);
-  const canAddend = isAccountNote || (!!note.authorId && note.authorId === playerHcpId);
-  return { canEdit: mine, canDelete: mine, canAddend };
+  return { canEdit: mine, canDelete: mine };
 }

@@ -16,21 +16,18 @@ describe("noteOwnership", () => {
   const otherAlias = note("n2", "d9-OTHER");
   const legacy = note("n3"); // account note, no authorId stamped
   const userNotes = [mine, otherAlias, legacy];
-  const args = { userNotes, myHcpId: "d9-ME", playerHcpId: "d0-PLAYER" };
+  const args = { userNotes, myHcpId: "d9-ME" };
 
-  test("current persona's note: full control", () => {
-    expect(noteOwnership(mine, args)).toEqual({ canEdit: true, canDelete: true, canAddend: true });
+  test("current persona's note: editable and deletable", () => {
+    expect(noteOwnership(mine, args)).toEqual({ canEdit: true, canDelete: true });
   });
-  test("another alias's account note: addend only", () => {
-    expect(noteOwnership(otherAlias, args)).toEqual({ canEdit: false, canDelete: false, canAddend: true });
+  test("another alias's account note: not editable or deletable", () => {
+    expect(noteOwnership(otherAlias, args)).toEqual({ canEdit: false, canDelete: false });
   });
   test("legacy account note with no authorId: grandfathered to current persona", () => {
-    expect(noteOwnership(legacy, args)).toEqual({ canEdit: true, canDelete: true, canAddend: true });
+    expect(noteOwnership(legacy, args)).toEqual({ canEdit: true, canDelete: true });
   });
-  test("static case-persona note (not an account note): addend only", () => {
-    expect(noteOwnership(note("n4", "d0-PLAYER"), args)).toEqual({ canEdit: false, canDelete: false, canAddend: true });
-  });
-  test("a note owned by no one here: no actions", () => {
-    expect(noteOwnership(note("zzz", "d9-STRANGER"), args)).toEqual({ canEdit: false, canDelete: false, canAddend: false });
+  test("a note not owned by the account: not editable or deletable", () => {
+    expect(noteOwnership(note("zzz", "d9-STRANGER"), args)).toEqual({ canEdit: false, canDelete: false });
   });
 });

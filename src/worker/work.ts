@@ -93,12 +93,6 @@ work.post("/notes/:id/addenda", async (c) => {
   const raw = (await c.req.json().catch(() => null)) as { caseId?: unknown; body?: unknown } | null;
   if (!raw || typeof raw.caseId !== "string" || raw.caseId.length === 0 || typeof raw.body !== "string" || raw.body.length === 0)
     return c.json({ error: "bad request" }, 400);
-  const owns = await c.env.DB.prepare(
-    `SELECT 1 FROM user_note WHERE id = ?1 AND userId = ?2`,
-  )
-    .bind(c.req.param("id"), c.get("userId"))
-    .first();
-  if (!owns) return c.json({ error: "not found" }, 404);
   const row = {
     id: crypto.randomUUID(),
     noteId: c.req.param("id"),
