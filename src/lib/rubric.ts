@@ -63,6 +63,16 @@ function itemMatches(noteTokens: string[], item: RubricItem): boolean {
   return item.triggers.some((trigger) => triggerMatches(noteTokens, trigger));
 }
 
+/**
+ * True if the text satisfies ANY of the given triggers (rubric matching rules:
+ * AND across a trigger's groups, OR of synonyms within a group, fuzzy on 5+
+ * letter tokens). Exported so the chronos matcher reuses one string engine.
+ */
+export function anyTriggerMatches(text: string, triggers: RubricTrigger[]): boolean {
+  const noteTokens = tokenize(text);
+  return triggers.some((trigger) => triggerMatches(noteTokens, trigger));
+}
+
 /** A section counts only when some line starts with one of its header synonyms. */
 function findSection(lineTokens: string[][], group: string[]): string | null {
   for (const synonym of group) {
