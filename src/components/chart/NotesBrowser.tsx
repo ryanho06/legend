@@ -98,13 +98,16 @@ export function NotesBrowser({
   );
 
   // Preview tabs live in CaseUiState now (controlled), so they survive main-tab
-  // switches and reload. An empty persisted set falls back to the newest note.
-  const openIds = openNoteIds.length ? openNoteIds : filtered[0] ? [filtered[0].id] : [];
-  const previewId = activePreviewId ?? openIds[0] ?? null;
-
-  const openNotes = openIds
+  // switches and reload. Resolve the persisted ids against the notes that
+  // actually exist now: a stale id (a note that left via a path other than
+  // closePreview) is dropped, and if that empties the set we fall back to the
+  // newest note so the pane never blanks while notes exist.
+  const resolved = openNoteIds
     .map((id) => notes.find((n) => n.id === id))
     .filter((n): n is Note => Boolean(n));
+  const openNotes = resolved.length ? resolved : filtered[0] ? [filtered[0]] : [];
+  const openIds = openNotes.map((n) => n.id);
+  const previewId = activePreviewId ?? openIds[0] ?? null;
   const activeNote = openNotes.find((n) => n.id === previewId) ?? openNotes.at(-1) ?? null;
 
   // Browser-tab behavior: on close, freeze the current per-tab width so the

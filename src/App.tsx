@@ -80,14 +80,44 @@ function App() {
     setHydratedKey(sessionKey);
   }, [sessionKey]);
 
+  // Latest persistable blob, mirrored into a ref (with its key) so the unload
+  // flush always sees current state without re-registering a listener on every
+  // keystroke.
+  const persistRef = useRef<{ key: string; blob: PersistedSession } | null>(null);
+
   useEffect(() => {
-    if (!sessionKey || hydratedKey !== sessionKey) return;
+    if (!sessionKey || hydratedKey !== sessionKey) {
+      // Pre-hydration or a just-switched user: never let a stale blob flush
+      // under the new key (the cross-user-leak guard, mirrored for the flush).
+      persistRef.current = null;
+      return;
+    }
     const blob: PersistedSession = { openCaseIds, activeCaseId, caseUi };
+    persistRef.current = { key: sessionKey, blob };
     const timer = setTimeout(() => {
       window.localStorage.setItem(sessionKey, JSON.stringify(blob));
     }, 250);
     return () => clearTimeout(timer);
   }, [hydratedKey, sessionKey, openCaseIds, activeCaseId, caseUi]);
+
+  // Flush the debounced blob synchronously when the tab is hidden or unloaded,
+  // so an edit made within the 250ms debounce window before a reload/close is
+  // not lost. visibilitychange + pagehide are the bfcache-safe unload signals.
+  useEffect(() => {
+    const flush = () => {
+      const pending = persistRef.current;
+      if (pending) window.localStorage.setItem(pending.key, JSON.stringify(pending.blob));
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   const activeCase = activeCaseId ? getCase(activeCaseId) : null;
 
