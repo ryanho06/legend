@@ -9,6 +9,7 @@ export function TopSystemBar({
   onMenu,
   user,
   activePatient,
+  taskLabel,
 }: {
   stickyOpen: boolean;
   onToggleSticky: () => void;
@@ -17,11 +18,17 @@ export function TopSystemBar({
   user: UserProfile;
   /** Drives the environment banner; absent when no chart is open. */
   activePatient?: CasePatient;
+  /** The active case's task label (e.g. "WARD ROUND REVIEW"), shown with the specialty. */
+  taskLabel?: string;
 }) {
   const [profileOpen, setProfileOpen] = useState(false);
-  const environment = activePatient
-    ? `TRAINING — ${activePatient.specialty} — ${activePatient.forename} ${activePatient.surname}`
-    : "TRAINING — MOUNT VERDANT HOSPITAL";
+  // With a chart open, the environment banner names the job to do
+  // (SPECIALTY — TASK, e.g. "GENERAL SURGERY — WARD ROUND REVIEW"); on the
+  // Patient Lists activity it names the hospital.
+  const environment =
+    activePatient && taskLabel
+      ? `${activePatient.specialty} — ${taskLabel}`
+      : "TRAINING — MOUNT VERDANT HOSPITAL";
   return (
     <header className="top-system-bar">
       <div className="top-left">

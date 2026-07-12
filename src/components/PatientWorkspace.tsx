@@ -9,7 +9,6 @@ import {
 import { ChartReview } from "./chart/ChartReview";
 import { NotesBrowser } from "./chart/NotesBrowser";
 import { MainTabBar } from "./layout/MainTabBar";
-import { NextJobBanner } from "./NextJobBanner";
 import { NoteEditorPanel } from "./notes/NoteEditorPanel";
 import { PatientSidebar } from "./panels/PatientSidebar";
 import { DocumentPanel } from "./panels/DocumentPanel";
@@ -30,7 +29,6 @@ import {
   refileUserNote,
 } from "../lib/userNotes";
 import { applyEvents, workToEvents } from "../lib/applyEvents";
-import { nextJob } from "../lib/nextJob";
 import { revealEvents } from "../lib/reveal";
 import { currentRound, nextRoundAt } from "../lib/rounds";
 import { caseNow } from "../lib/simTime";
@@ -106,18 +104,6 @@ export function PatientWorkspace({
   const activeRound = useMemo(
     () => currentRound(activeCase.rounds ?? [], work.simNow),
     [activeCase.rounds, work.simNow],
-  );
-  // The singleplayer "what should I write now" hint (Performance dock's sibling
-  // banner). Pure; derives from the same round/simNow/task inputs as activeRound.
-  const job = useMemo(
-    () =>
-      nextJob({
-        rounds: activeCase.rounds ?? [],
-        simNow: work.simNow,
-        userNotes,
-        task: activeCase.rubric.task,
-      }),
-    [activeCase.rounds, work.simNow, userNotes, activeCase.rubric.task],
   );
   const events = useMemo(
     () => [...revealed, ...workToEvents(userNotes, addenda)],
@@ -349,8 +335,6 @@ export function PatientWorkspace({
                 {(work.loadError ?? saveError) && (
                   <div className="editor-save-error">{work.loadError ?? saveError}</div>
                 )}
-
-                <NextJobBanner label={job.label} done={job.done} />
 
                 {mainTab === "summary" && <SummaryModule />}
 

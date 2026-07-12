@@ -155,6 +155,7 @@ function App() {
         onMenu={() => setActiveCaseId(null)}
         user={user}
         activePatient={activeCase?.patient}
+        taskLabel={activeCase?.rubric.task.label}
       />
 
       <PatientTabBar
