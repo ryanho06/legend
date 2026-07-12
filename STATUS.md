@@ -3,7 +3,7 @@
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
 Last updated: 2026-07-12 (Follow-up cleanups after the pre-multiplayer batch, done this
-session `f03b998..7412f74`: the singleplayer task hint moved OUT of the dismissible next-job
+session `f03b998..dacc54f`: the singleplayer task hint moved OUT of the dismissible next-job
 banner and INTO the top-bar environment label (now "SPECIALTY — TASK", e.g. "GENERAL
 SURGERY — WARD ROUND REVIEW", from `rubric.task.label`); `NextJobBanner.tsx` +
 `nextJob.ts`/`.test.ts` deleted, `NEXT_JOB_HIDE_KEY` retired. Plus two review Minors fixed
@@ -11,8 +11,9 @@ SURGERY — WARD ROUND REVIEW", from `rubric.task.label`); `NextJobBanner.tsx` +
 on pagehide/visibilitychange so an edit within 250ms of a reload is not lost), and the five
 historical root specs archived to `docs/superpowers/specs/user/`. Manual checks Ryan owed
 both PASS (guest→Google link, alias-switch edit-lock). Full gate green: tsc, 276 node tests
-(35 files), 35 workers tests (4 files), lint, build. NOT pushed.)
-Branch / worktree: main (commits local, NOT pushed to origin, per standing rule)
+(35 files), 35 workers tests (4 files), lint, build. Then PUSHED to origin/main as the stable
+multiplayer base — the whole 70-commit backlog `7369222..dacc54f` went up as a clean fast-forward.)
+Branch / worktree: main (PUSHED to origin 2026-07-12; origin/main now tracks main)
 Latest session (14 commits, `8f16eeb..492f61a`): Pre-multiplayer fixes batch (spec
 `docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md`, plan
 `docs/superpowers/plans/2026-07-11-premultiplayer-fixes.md`), four fixes to land before the
@@ -77,7 +78,7 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
-- Follow-up cleanups (2026-07-12, `f03b998..7412f74`, 3 commits, on top of the pre-multiplayer
+- Follow-up cleanups (2026-07-12, `f03b998..dacc54f`, 4 commits, on top of the pre-multiplayer
   batch): (1) **Singleplayer task highlight** — replaced the dismissible next-job banner (Fix D)
   with the case task shown in the top-bar environment label. `TopSystemBar` now renders
   "{specialty} — {task.label}" (e.g. "GENERAL SURGERY — WARD ROUND REVIEW") when a chart is open,
@@ -93,7 +94,7 @@ feedback (cce42a4..dc9f29b).
   cross-dir refs updated (this file, `docs/PERMISSIONS_RESEARCH.md`, the spec's own self-location
   line); sibling + dated-SDD refs left (still resolve / historical records). Review Minor 1
   (`playerHcpId`) KEPT per decision; Minor 2 (banner "Next:" prefix) moot. Full gate green: tsc,
-  276 node (35 files), 35 workers (4 files), lint, build. NOT pushed.
+  276 node (35 files), 35 workers (4 files), lint, build. PUSHED to origin/main 2026-07-12.
 - Pre-multiplayer fixes batch (2026-07-11, 14 commits (`8f16eeb..492f61a`), across 4 fixes,
   subagent-driven off a spec+plan, every task review-clean or controller-gated): **Fix A**
   guest-to-Google account link (`src/worker/rekey.ts`) now WRITES the guest's persona
@@ -334,7 +335,7 @@ feedback (cce42a4..dc9f29b).
   clamp all confirmed); see the Done entries above for detail and the decision log. The
   engine is no longer inert: `cholangitis001` authors `events`/`rounds`/`chronos`. Dynamic
   Patients v1 is now functionally COMPLETE on `main` and SHIPPED to prod (version 22282660;
-  see Next concrete step for the ship record). Git NOT pushed to origin yet.
+  see Next concrete step for the ship record). Pushed to origin 2026-07-12.
 - Session 2026-07-10 commit range: `5d8b502..HEAD` (phase 3 spec/plan/build/
   ship + post-ship wave). Pushed to origin at session end with Ryan's approval.
   Prior range 8574cee..5d8b502 (backend pivot: research,
@@ -343,10 +344,13 @@ feedback (cce42a4..dc9f29b).
 
 ## Next concrete step
 The pre-multiplayer fixes batch (Fix A/B/C/D, `8f16eeb..492f61a`) PLUS this session's follow-up
-cleanups (`f03b998..7412f74`, see the top Done entry) are DONE and VERIFIED on `main` (NOT
-pushed): full gate green throughout. Ryan asked to "wait until a couple more fixes" before
-pushing — those fixes have now landed. Remaining = Ryan's `git push`, then start the MULTIPLAYER
-branch off a stable origin.
+cleanups (`f03b998..dacc54f`, see the top Done entry) are DONE, VERIFIED, and PUSHED to
+origin/main (2026-07-12; the whole 70-commit backlog `7369222..dacc54f` went up as a clean
+fast-forward, with this handoff doc commit on top). Full gate green throughout. **origin is now
+the stable base for multiplayer.** The next session's job: start the MULTIPLAYER branch off
+origin/main and DESIGN it first (brainstorm -> spec -> plan; do not jump to code). Fork D moves
+`case_session.scope` from userId to sessionId (a value change — the column is already named
+`scope`). See the Still-open note below + memory `legend-multiplayer-permissions`.
 
 Resolved this session (were the deferred "couple extra fixes"):
 - Singleplayer task highlight moved into the top-bar label; next-job banner removed (item done,
@@ -472,10 +476,10 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
 ## Notes for next session
 - Dynamic Patients v1 (Plans 1-4) is COMPLETE on `main` and SHIPPED to prod (version
   22282660, remote migration 0004 applied, authed /session verified 200 in prod). The
-  pre-multiplayer fixes batch (Fix A/B/C/D) is now ALSO done on `main` (not pushed). The
-  CURRENT next step is Ryan's: browser verification, `git push` (NOT pushed to origin
-  yet), then a multiplayer branch (see "Next concrete step").
-- Verify target: `npm test` (280 tests, 36 files, node pool, verified green this
+  pre-multiplayer fixes batch (Fix A/B/C/D) and this session's cleanups are ALSO on `main`,
+  and `main` is now PUSHED to origin (2026-07-12). The CURRENT next step is the MULTIPLAYER
+  branch off origin/main (see "Next concrete step").
+- Verify target: `npm test` (276 tests, 35 files, node pool, verified green this
   session), `npm run test:workers` (35 tests, 4 files, real local D1, verified green
   this session), `npx tsc -b`, `npm run lint`
   (clean — the old StickyNotePopup.tsx error was fixed in the F1 fix wave;
@@ -485,7 +489,7 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   (`npx wrangler d1 migrations apply legend-db --remote`) always gated on Ryan.
 - Ship gate DONE (2026-07-11): remote migration 0004 applied, then `npm run deploy` = prod
   version 22282660, verified live (authed `/session` -> 200 `{"simNow":0}`). The dynamic
-  `cholangitis001` loop is now live in prod. `git push` to origin still pending (Ryan).
+  `cholangitis001` loop is now live in prod. `git push` to origin DONE 2026-07-12 (origin/main == main).
   Order lesson for future ships: remote migration STRICTLY before deploy (a premature
   deploy `92ef196d` was rolled back to `79d2a874` before the correct migration-first ship).
 - SDD execution ledger for this whole pivot: `.superpowers/sdd/progress.md`.
