@@ -9,7 +9,7 @@ tasks review-clean or controller-gated. Full gate green: tsc, 280 node tests (36
 workers tests (4 files), lint, build. NOT pushed to origin; remaining = browser
 verification, then Ryan's `git push`, then a multiplayer branch.)
 Branch / worktree: main (commits local, NOT pushed to origin, per standing rule)
-Latest session (8f16eeb..492f61a, 9 commits): Pre-multiplayer fixes batch (spec
+Latest session (14 commits, `8f16eeb..492f61a`): Pre-multiplayer fixes batch (spec
 `docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md`, plan
 `docs/superpowers/plans/2026-07-11-premultiplayer-fixes.md`), four fixes to land before the
 multiplayer branch diverges. **Fix A** (`src/worker/rekey.ts`): guest-to-Google account
@@ -73,7 +73,7 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
-- Pre-multiplayer fixes batch (2026-07-11, 8f16eeb..492f61a, 9 commits across 4 fixes,
+- Pre-multiplayer fixes batch (2026-07-11, 14 commits (`8f16eeb..492f61a`), across 4 fixes,
   subagent-driven off a spec+plan, every task review-clean or controller-gated): **Fix A**
   guest-to-Google account link (`src/worker/rekey.ts`) now WRITES the guest's persona
   (forename/surname/grade/hcpId) onto the linked Google user row instead of snapshotting it
@@ -321,11 +321,30 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-The pre-multiplayer fixes batch (Fix A/B/C/D, `8f16eeb..492f61a`) is DONE on `main`, full
-gate green (see Done above). Remaining: browser verification per each fix's Acceptance
-section in `docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md` §4-7 (fresh
-guest + cholangitis001 for the dynamic-loop parts), then Ryan's `git push` (still NOT
-pushed to origin), then start a MULTIPLAYER branch off a stable origin `main`.
+The pre-multiplayer fixes batch (Fix A/B/C/D, code `8f16eeb..492f61a`; docs reconcile `d345ae7`)
+is DONE and VERIFIED on `main` (NOT pushed): full gate green, final whole-branch review (opus)
+Ready-to-merge (no Critical/Important), and browser verification 3/3 PASS (reload resume,
+cross-user isolation, next-job banner incl. sign-advances-round). Ryan's next (this reset session):
+a couple optional cleanups, then `git push`, then start the MULTIPLAYER branch off a stable origin.
+
+Deferred candidates for the "couple extra fixes" (all NON-BLOCKING; full detail in
+`.superpowers/sdd/progress.md`):
+- 4 review Minors: `playerHcpId` is now written-but-unread by ownership (rec: KEEP it as the
+  meaningful "persona you play" concept for multiplayer); the banner "Next:" prefix reads slightly
+  off for rounds-less static-task cases; a self-healing stale-preview edge; and the 250ms
+  save-debounce is not flushed on tab-close (a `beforeunload`/`visibilitychange` flush closes the
+  last-250ms-before-F5 gap).
+- Root-clutter archival (Ryan-requested, DEFERRED pending his call): move the historical root docs
+  `SPEC.md`, `PLAN.md`, `DYNAMIC_PATIENTS.md`, `PLAN4_KICKOFF.md` into `docs/superpowers/specs/`
+  (keep README/CLAUDE/STATUS/CASE_AUTHORING/CASE_BACKLOG at root). Open question: that dir vs Ryan's
+  suggested `.superpowers/specs/user/`, and whether to also move the heavily-cross-referenced
+  `DYNAMIC_PATIENTS_SPEC.md` (would need a ref-sweep).
+- Manual browser checks not automatable this session: Fix A Google-link click-through; Fix B
+  alias-switch edit-lock (write a note as persona X, switch to Y, confirm X's note shows Addendum
+  but NOT Edit/Delete).
+- MULTIPLAYER forward-note: the addendum server route (`POST /api/notes/:id/addenda`) is now
+  UNGUARDED by design (safe in singleplayer since read-back is account-scoped); the multiplayer
+  branch MUST re-establish addendum authz. See memory `legend-multiplayer-permissions`.
 
 Dynamic Patients v1 is functionally COMPLETE on `main` (Plans 1-4, all Done above) and
 SHIPPED to prod on 2026-07-11 as version `22282660`. Ship record (Ryan-driven):
@@ -418,12 +437,9 @@ Historical context (phases 1-3, all now shipped/built, kept for the record):
   in-character, case-accurate replies/pushback (e.g. micro: wound culture is
   gram-negative only, blood cultures clear — continue metro + cipro IV).
   Async request/response, D1 rows, no real-time transport.
-- Phase 0 dispute (2026-07-09): Ryan believes unsigned drafts already survive
-  reload; the code says otherwise — drafts live in `caseUi.editors`, plain
-  `useState` at App.tsx:49 (and `openCaseIds` App.tsx:46), wiped on reload.
-  What persists is pended/signed notes. Awaiting Ryan's recheck: either Pend
-  was the observed mechanism (then phase 0 is optional polish or declared
-  done-by-design) or an unsigned tab really survived F5 (then it's a bug hunt).
+- Phase 0 dispute (2026-07-09): RESOLVED. Unsigned drafts now persist across
+  reload deliberately via Fix C (`legend.session.<userId>`); the old "wiped on
+  reload" claim no longer holds.
 
 ## Ideas / later
 - LLM judge layer for paraphrase-heavy rubric items (schema already judge-agnostic).
