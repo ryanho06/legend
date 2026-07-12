@@ -513,4 +513,4 @@ safe to scale to the fleet.
   fleet migration deferred/lazy. Confirmed 2026-07-10.
 - Sequencing: time-infra+pilot -> engine -> hospital shell (own spec, parallel); fleet
   migration lazy. Confirmed 2026-07-10.
-- Spec location: `DYNAMIC_PATIENTS_SPEC.md` at repo root, sibling to the research doc.
+- Spec location: `DYNAMIC_PATIENTS_SPEC.md` in `docs/superpowers/specs/user/`, sibling to the research doc.

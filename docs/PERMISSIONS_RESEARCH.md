@@ -199,7 +199,7 @@ admin plugin lands), then for a patient route, one indexed lookup on
 `patient_assignment` to decide visibility. This is the same middleware seam as `work.ts`,
 extended by two reads.
 
-**Design the `scope` column in from day one.** DYNAMIC_PATIENTS.md already flags
+**Design the `scope` column in from day one.** `docs/superpowers/specs/user/DYNAMIC_PATIENTS.md` already flags
 `scope` (`userId` now, `sessionId` under multiplayer) as the one migration that hurts to
 retrofit. The assignment table shares that column and that risk, so settle
 `userId`-vs-`sessionId` for both tables together, before either is created. This is the
@@ -242,8 +242,9 @@ Verified against primary docs and issues (fetched 2026-07-10):
 Codebase, read directly: `src/worker/auth.ts` (current `createAuth`, `hcpId`
 `input: false` + `databaseHooks`), `src/worker/work.ts` (session-guard middleware
 pattern), `src/worker/purge.ts` + `src/worker/index.ts` (30-day anon purge cron),
-`STATUS.md` (phase-3 state, the recorded no-password decision), `DYNAMIC_PATIENTS.md`
-(the `scope` column and the multiplayer-migration warning).
+`STATUS.md` (phase-3 state, the recorded no-password decision),
+`docs/superpowers/specs/user/DYNAMIC_PATIENTS.md` (the `scope` column and the
+multiplayer-migration warning).
 
 Inferred, not from a primary source: the invite-code table shape, the
 `patient_assignment` table shape, the `role` set (`admin`/`faculty`/`trainee`), and the
