@@ -2,12 +2,16 @@
 
 > Living state. Update at the end of every working block so a fresh session can resume from here after `/clear`.
 
-Last updated: 2026-07-11 (Pre-multiplayer fixes batch: 4 near-independent singleplayer
-fixes (guest-to-Google identity link, universal addenda + persona-gated edit/delete, full
-workspace reload resume, next-job banner) built subagent-driven off a spec+plan, all 9
-tasks review-clean or controller-gated. Full gate green: tsc, 280 node tests (36 files), 35
-workers tests (4 files), lint, build. NOT pushed to origin; remaining = browser
-verification, then Ryan's `git push`, then a multiplayer branch.)
+Last updated: 2026-07-12 (Follow-up cleanups after the pre-multiplayer batch, done this
+session `f03b998..7412f74`: the singleplayer task hint moved OUT of the dismissible next-job
+banner and INTO the top-bar environment label (now "SPECIALTY — TASK", e.g. "GENERAL
+SURGERY — WARD ROUND REVIEW", from `rubric.task.label`); `NextJobBanner.tsx` +
+`nextJob.ts`/`.test.ts` deleted, `NEXT_JOB_HIDE_KEY` retired. Plus two review Minors fixed
+(note preview no longer blanks on a stale preview id; the workspace-resume debounce flushes
+on pagehide/visibilitychange so an edit within 250ms of a reload is not lost), and the five
+historical root specs archived to `docs/superpowers/specs/user/`. Manual checks Ryan owed
+both PASS (guest→Google link, alias-switch edit-lock). Full gate green: tsc, 276 node tests
+(35 files), 35 workers tests (4 files), lint, build. NOT pushed.)
 Branch / worktree: main (commits local, NOT pushed to origin, per standing rule)
 Latest session (14 commits, `8f16eeb..492f61a`): Pre-multiplayer fixes batch (spec
 `docs/superpowers/specs/2026-07-11-premultiplayer-fixes-design.md`, plan
@@ -73,6 +77,23 @@ mobile gate (3b04aeb..70c80ca), tab restructure (47ee20b..54a1ea1), note
 feedback (cce42a4..dc9f29b).
 
 ## Done
+- Follow-up cleanups (2026-07-12, `f03b998..7412f74`, 3 commits, on top of the pre-multiplayer
+  batch): (1) **Singleplayer task highlight** — replaced the dismissible next-job banner (Fix D)
+  with the case task shown in the top-bar environment label. `TopSystemBar` now renders
+  "{specialty} — {task.label}" (e.g. "GENERAL SURGERY — WARD ROUND REVIEW") when a chart is open,
+  "TRAINING — MOUNT VERDANT HOSPITAL" otherwise. Deleted `src/components/NextJobBanner.tsx`,
+  `src/lib/nextJob.ts` + `nextJob.test.ts`, the `nextJob`/banner wiring in `PatientWorkspace`,
+  `NEXT_JOB_HIDE_KEY` in `session.ts` (+ its signOut sweep exemption), and the `.next-job-banner`
+  CSS. (2) **Two review Minors** — `NotesBrowser` resolves the persisted preview ids against live
+  notes BEFORE the newest-note fallback, so a stale preview id can no longer blank the pane while
+  notes exist; `App.tsx` flushes the debounced `legend.session.<userId>` blob on
+  pagehide/visibilitychange (latest-blob-with-key ref, guarded so it never writes one user's blob
+  under another's key). (3) **Root-doc archival** — `SPEC.md`, `PLAN.md`, `PLAN4_KICKOFF.md`,
+  `DYNAMIC_PATIENTS.md`, `DYNAMIC_PATIENTS_SPEC.md` `git mv`'d to `docs/superpowers/specs/user/`;
+  cross-dir refs updated (this file, `docs/PERMISSIONS_RESEARCH.md`, the spec's own self-location
+  line); sibling + dated-SDD refs left (still resolve / historical records). Review Minor 1
+  (`playerHcpId`) KEPT per decision; Minor 2 (banner "Next:" prefix) moot. Full gate green: tsc,
+  276 node (35 files), 35 workers (4 files), lint, build. NOT pushed.
 - Pre-multiplayer fixes batch (2026-07-11, 14 commits (`8f16eeb..492f61a`), across 4 fixes,
   subagent-driven off a spec+plan, every task review-clean or controller-gated): **Fix A**
   guest-to-Google account link (`src/worker/rekey.ts`) now WRITES the guest's persona
@@ -294,7 +315,7 @@ feedback (cce42a4..dc9f29b).
   climbing 118→124, dual culprits indapamide+sertraline, seizure filed as a "funny
   turn". General Medicine, minGrade fy, progress note. tsc + 189 tests + lint green.
   Case registry is now 17 folders.
-- Dynamic patients v1: SPEC approved + committed (`DYNAMIC_PATIENTS_SPEC.md`, e0ca413;
+- Dynamic patients v1: SPEC approved + committed (`docs/superpowers/specs/user/DYNAMIC_PATIENTS_SPEC.md`, e0ca413;
   Model B revision b63b37b). All 6 forks resolved (spec §15). Engine = **Model B**: server
   stores only `case_session.simNow`; the client reveals authored `events.ts` by that clock;
   NO `case_event` table in v1 (deferred to LLM/multiplayer). **Plan 1** (time model:
@@ -321,27 +342,22 @@ feedback (cce42a4..dc9f29b).
   never push without Ryan's approval).
 
 ## Next concrete step
-The pre-multiplayer fixes batch (Fix A/B/C/D, code `8f16eeb..492f61a`; docs reconcile `d345ae7`)
-is DONE and VERIFIED on `main` (NOT pushed): full gate green, final whole-branch review (opus)
-Ready-to-merge (no Critical/Important), and browser verification 3/3 PASS (reload resume,
-cross-user isolation, next-job banner incl. sign-advances-round). Ryan's next (this reset session):
-a couple optional cleanups, then `git push`, then start the MULTIPLAYER branch off a stable origin.
+The pre-multiplayer fixes batch (Fix A/B/C/D, `8f16eeb..492f61a`) PLUS this session's follow-up
+cleanups (`f03b998..7412f74`, see the top Done entry) are DONE and VERIFIED on `main` (NOT
+pushed): full gate green throughout. Ryan asked to "wait until a couple more fixes" before
+pushing — those fixes have now landed. Remaining = Ryan's `git push`, then start the MULTIPLAYER
+branch off a stable origin.
 
-Deferred candidates for the "couple extra fixes" (all NON-BLOCKING; full detail in
-`.superpowers/sdd/progress.md`):
-- 4 review Minors: `playerHcpId` is now written-but-unread by ownership (rec: KEEP it as the
-  meaningful "persona you play" concept for multiplayer); the banner "Next:" prefix reads slightly
-  off for rounds-less static-task cases; a self-healing stale-preview edge; and the 250ms
-  save-debounce is not flushed on tab-close (a `beforeunload`/`visibilitychange` flush closes the
-  last-250ms-before-F5 gap).
-- Root-clutter archival (Ryan-requested, DEFERRED pending his call): move the historical root docs
-  `SPEC.md`, `PLAN.md`, `DYNAMIC_PATIENTS.md`, `PLAN4_KICKOFF.md` into `docs/superpowers/specs/`
-  (keep README/CLAUDE/STATUS/CASE_AUTHORING/CASE_BACKLOG at root). Open question: that dir vs Ryan's
-  suggested `.superpowers/specs/user/`, and whether to also move the heavily-cross-referenced
-  `DYNAMIC_PATIENTS_SPEC.md` (would need a ref-sweep).
-- Manual browser checks not automatable this session: Fix A Google-link click-through; Fix B
-  alias-switch edit-lock (write a note as persona X, switch to Y, confirm X's note shows Addendum
-  but NOT Edit/Delete).
+Resolved this session (were the deferred "couple extra fixes"):
+- Singleplayer task highlight moved into the top-bar label; next-job banner removed (item done,
+  the "Next:" prefix Minor is moot — banner gone).
+- Stale-preview blank-pane Minor fixed (`NotesBrowser` resolves ids before the newest-note
+  fallback); workspace-resume debounce now flushes on pagehide/visibilitychange.
+- `playerHcpId` review Minor: KEPT per Ryan (meaningful "persona you play" concept for multiplayer).
+- Root-doc archival DONE: the five historical specs live in `docs/superpowers/specs/user/`.
+- Manual checks (Ryan): guest→Google link PASS, alias-switch edit-lock PASS.
+
+Still open:
 - MULTIPLAYER forward-note: the addendum server route (`POST /api/notes/:id/addenda`) is now
   UNGUARDED by design (safe in singleplayer since read-back is account-scoped); the multiplayer
   branch MUST re-establish addendum authz. See memory `legend-multiplayer-permissions`.
@@ -360,7 +376,7 @@ SHIPPED to prod on 2026-07-11 as version `22282660`. Ship record (Ryan-driven):
 
 Multiplayer is fork D: the `case_session.scope` column already carries the namespace
 (value = userId today; becomes sessionId for shared sessions), so it is a value change,
-not a migration. See DYNAMIC_PATIENTS_SPEC.md §4.2 (hospital shell) + §13 (multiplayer
+not a migration. See docs/superpowers/specs/user/DYNAMIC_PATIENTS_SPEC.md §4.2 (hospital shell) + §13 (multiplayer
 deferred, scope column carried now).
 
 DEV NOTE (Plan 4b forward-only clamp): the server `PUT /session` now clamps
